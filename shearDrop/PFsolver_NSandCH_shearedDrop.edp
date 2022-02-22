@@ -34,10 +34,10 @@ include "include_postProc.idp"
 real Sp  = 6.0;
 
 // Interface thickness adjustment (1 corresponds to eps = 0.7 nm, 2 to 1.4 nm, etc.)
-real Tn  = 1.0;
+real Tn  = 4.0;
 
 // Contact angle specific parameters (including changes due to calibration)
-real thE = 127.4/180.0*pi;
+real thE = 91.0/180.0*pi;//127.4/180.0*pi;//
 real Pe  = 0.050091499*Sp*Tn; // Calibrated
 real mufa= 0.0;
 real mufr= 0.0;
@@ -80,7 +80,7 @@ real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Time step, duration, save, tolerances, etc.
 real dt    = 0.002;
-real tfin  = 10.0;
+real tfin  = 10;
 real tout  = 0.02;
 int  dref  = 40; // Number of time-steps between mesh adaption
 int  bNew  = 1; // 1-start new simulation; 0-restart from previous state
@@ -399,7 +399,7 @@ else
 //plot(t,fill=1,value=1);
 plot(Th);
 //plot(u,fill=1,value=1);
-plot(c,fill=1,value=1);
+//plot(c,fill=1,value=1);
 // plot(fi,fill=1,value=1);
 
 
@@ -441,7 +441,8 @@ while(NstedChck < Nsted)
     cout << " ";
     solveNonLinNSeq
     getMaxCFL
-    plot(c,fill=1,value=1);    
+    plot(c,fill=1,value=1);
+    // plot(Th);    
     getInterfGeom
     updCLcoord
     dxNew = xstop(0)-xsbot(0);
@@ -478,15 +479,17 @@ while(NstedChck < Nsted)
         divChck = int2d(Th)( dx(u)+dy(v) );
         cout << " Divergence of flow field = " << divChck << endl;
         // plot(fi,fill=1,value=1);
-        plot(c,fill=1,value=1);
+        // plot(c,fill=1,value=1);
         // plot(u,fill=1,value=1);
+        // plot(Th);
     }
     // Prepare for the next time step
     uO[] = u[]; fiO[] = fi[]; dxOld = dxNew;
     nAdapt++;
     // plot(fi,fill=1,value=1);
-    plot(c,fill=1,value=1);
+    // plot(c,fill=1,value=1);
     // plot(u,fill=1,value=1);
+    // plot(Th);
 }
 
 // Final outputs after the end of the simulation
