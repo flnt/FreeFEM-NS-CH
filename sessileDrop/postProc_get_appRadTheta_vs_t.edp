@@ -31,7 +31,7 @@ load "Element_P3";
 include "include_postProc.idp"
 
 // Number of files to be processed
-int Nf = 2844+1;
+int Nf = 120;//2844+1;
 
 // Limiting maximum number of iterations in infinite loops
 int Icur, Imax = 100;
