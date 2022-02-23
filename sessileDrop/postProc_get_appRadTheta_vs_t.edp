@@ -31,17 +31,17 @@ load "Element_P3";
 include "include_postProc.idp"
 
 // Number of files to be processed
-int Nf = 120;//2844+1;
+int Nf = 150;//2844+1;
 
 // Limiting maximum number of iterations in infinite loops
 int Icur, Imax = 100;
 
 // Some definitions from main simulation file
 real Cn  = 0.025;
-real ph = 0.16;
+real ph = 0.0;
 real xmin = -3.62;
 real xmax =  3.62;
-real pd = 0.24;
+real pd = 1.0;
 int cN = (xmax-xmin)/pd;
 xmax = xmin + (cN+1)*pd;
 

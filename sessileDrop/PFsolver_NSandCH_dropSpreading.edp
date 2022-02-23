@@ -51,7 +51,7 @@ real Pe  = 7.116318;      // Small Pe number - seems that I need more non-lin it
 real Re  = 907.4;
 real mu2 = 1.812e-2;
 real rho2= 1.206e-3;
-real thE = 90.0/180.0*pi;
+real thE = 30.0/180.0*pi;
 real mufa= 0.96;
 real mufr= 0.96;
 
@@ -70,15 +70,15 @@ real xct= dxc; // -;- x coordinate -;-
 
 
 // Mesh resolution
-int  n     = 12; // Number of segments per unit length
-real refI  = 15.0; // Refinement factor for the interface
+int  n     = 10; // Number of segments per unit length
+real refI  = 4.0; // Refinement factor for the interface
 // refI = 30.0;
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Other parameters, time step, duration, save, tolerances, etc.
-real dt    = 0.05;
-real tfin  = 10.0;
-real tout  = 0.5;
+real dt    = 0.02;
+real tfin  = 15.0;
+real tout  = 0.1;
 int  dref  = 50; // Number of time-steps between mesh adaption
 real tolNI = 1.0e-9; // Tolerance for non-linear iterations
 int  mni   = 1000;
