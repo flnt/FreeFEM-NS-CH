@@ -84,7 +84,7 @@ itffile << "# x [nm], y [nm], k [1/nm]" << endl;
 for(int j=0; j<N1; j++) itffile << xys1(0,j) << " " << xys1(1,j) << endl;
 }
 
-    
+
 // // If needed, can average over number os steady solutions
 // // Create loop over last 50 solutions
 // for(int i=225; i<276; i++)
