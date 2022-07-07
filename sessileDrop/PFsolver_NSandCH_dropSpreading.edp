@@ -44,14 +44,14 @@ real Uimp = 0.0;
 real UimpNd = Uimp/8.09;
 
 // Other physical parameters
-real Ca  = 2.120000e-02;
+real Ca  = 1.06; //0.0212;
 real Cn  = 0.01;
 // According to Yue sharp interface, Pe < 16*sqrt(mu)*Ca/Cn = 18.46 "20.655911179772893" (for these parameters)
-real Pe  = 3.0;      // Small Pe number - seems that I need more non-lin iterations; or smaller time step
-real Re  = 3.978000e+00;
+real Pe  = 100.0;      // Small Pe number - seems that I need more non-lin iterations; or smaller time step
+real Re  = 3.978;
 real mu2 = 1e-2;
 real rho2= 1e-2;
-real thE = 80.0/180.0*pi;
+real thE = 60.0/180.0*pi;
 real mufa= 0.0;
 real mufr= 0.0;
 
@@ -70,15 +70,15 @@ real xct= dxc; // -;- x coordinate -;-
 
 
 // Mesh resolution
-int  n     = 12; // Number of segments per unit length
-real refI  = 20.0; // Refinement factor for the interface
+int  n     = 16; // Number of segments per unit length
+real refI  = 12.0; // Refinement factor for the interface
 // refI = 30.0;
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Other parameters, time step, duration, save, tolerances, etc.
-real dt    = 0.0001;
-real tfin  = 0.15;
-real tout  = 0.001;
+real dt    = 0.005;
+real tfin  = 0.6;
+real tout  = dt*10.0;
 int  dref  = 10; // Number of time-steps between mesh adaption
 real tolNI = 1.0e-9; // Tolerance for non-linear iterations
 int  mni   = 1000;
