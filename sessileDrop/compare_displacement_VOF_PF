@@ -1,0 +1,10 @@
+set key top left
+plot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.00638054_a0.5_LEVEL9" u 1:(-1 + 2*$2 + 0.00638054*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 0.5"
+replot "stats.txt" u 1:(-1-$2+$4) w l lw 2 title "PF dt = 5e-5"
+
+pause -1
+
+set logscale x
+replot
+
+pause -1

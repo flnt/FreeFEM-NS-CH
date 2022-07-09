@@ -44,10 +44,10 @@ real Uimp = 0.0;
 real UimpNd = Uimp/8.09;
 
 // Other physical parameters
-real Ca  = 1.06; //0.0212;
+real Ca  = 0.0212;
 real Cn  = 0.01;
 // According to Yue sharp interface, Pe < 16*sqrt(mu)*Ca/Cn = 18.46 "20.655911179772893" (for these parameters)
-real Pe  = 100.0;      // Small Pe number - seems that I need more non-lin iterations; or smaller time step
+real Pe  = 3.0;      // Small Pe number - seems that I need more non-lin iterations; or smaller time step
 real Re  = 3.978;
 real mu2 = 1e-2;
 real rho2= 1e-2;
@@ -56,13 +56,13 @@ real mufa= 0.0;
 real mufr= 0.0;
 
 // Domain extent (use 0.125 mm as reference length scale)
-real xmin = -0.5;
-real xmax =  0.5;
+real xmin = -1.0;
+real xmax =  1.0;
 real ymin =  0.0;
 real ymax =  1.0;
 
 // Parameters of the drop
-real dR = 0.25;  // Radius
+real dR = 0.5;  // Radius
 real dxc= 0.0;  // x coordinate
 real dyc= 0.0;  // y coordinate
 real yct= dyc; // Variable to track the y coordinate of center of mass
@@ -70,16 +70,16 @@ real xct= dxc; // -;- x coordinate -;-
 
 
 // Mesh resolution
-int  n     = 16; // Number of segments per unit length
+int  n     = 10; // Number of segments per unit length
 real refI  = 12.0; // Refinement factor for the interface
 // refI = 30.0;
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Other parameters, time step, duration, save, tolerances, etc.
-real dt    = 0.005;
-real tfin  = 0.6;
-real tout  = dt*10.0;
-int  dref  = 10; // Number of time-steps between mesh adaption
+real dt    = 0.00005;
+real tfin  = 2.0;
+real tout  = tfin/50.;
+int  dref  = 100; // Number of time-steps between mesh adaption
 real tolNI = 1.0e-9; // Tolerance for non-linear iterations
 int  mni   = 1000;
 int  bNew  = 1; // 1-start new simulation; 0-restart from previous state
