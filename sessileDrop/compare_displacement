@@ -1,0 +1,22 @@
+set key top left
+plot "~/basilisk/contactline/toy_AZF/TOY1_Ca0.0212_Re3.978_angle70_eps0_a0_LEVEL9" u 1:(-1 + 2*$2) w l lw 2 title "VOF no toy"
+# replot "~/basilisk/contactline/toy_AZF/TOY0_Ca0.0212_Re3.978_angle70_eps0.0121062_a3_LEVEL8" u 1:(-1 + 2*$2) w l lw 2 title "VOF dyn"
+# replot "~/basilisk/contactline/toy_AZF/TOY1_Ca0.0212_Re3.978_angle70_eps0.00698953_a1_LEVEL9" u 1:(-1 + 2*$2 + 2*0.00698953*sin(3.1416*$5/180)) w l lw 2 title "VOF toy a = 1"
+# replot "~/basilisk/contactline/toy_AZF/TOY1_Ca0.0212_Re3.978_angle70_eps0.00988469_a2_LEVEL9" u 1:(-1 + 2*$2 + 2*0.00988469*sin(3.1416*$5/180)) w l lw 2 title "VOF toy a = 2"
+# replot "~/basilisk/contactline/toy_AZF/TOY1_Ca0.0212_Re3.978_angle70_eps0.0121062_a3_LEVEL9" u 1:(-1 + 2*$2 + 2*0.0121062*sin(3.1416*$5/180)) w l lw 2 title "VOF toy a = 3"
+# replot "~/basilisk/contactline/toy_AZF/TOY1_Ca0.0212_Re3.978_angle70_eps0.00221028_a0.1_LEVEL10" u 1:(-1 + 2*$2 + 2*0.00221028*sin(3.1416*$5/180)) w l lw 2 title "VOF toy a = 0.1"
+# replot "~/basilisk/contactline/toy_AZF/TOY1_Ca0.0212_Re3.978_angle70_eps0.00221028_a0.1_LEVEL10" u 1:(-1 + 2*$2) w l lw 2 title "VOF toy a = 0.1 no extr"
+# replot "../refined_sessile/stats.txt" u 1:(-1-$2+$4) w l lw 4 dt 2 title "PF dt = 1e-4 theta 60"
+replot "stats_Ca0.0212_Cn0.01_Pe5_Re3.978_mu1e-2_rho1e-2_theta70_n10_refI12_mGrw1.2_dt1e-4" u 1:(-1-$2+$4) w l lw 4 dt 2 title "PF Pe = 5 dt = 1e-4 theta 70"
+replot "stats.txt" u 1:(-1-$2+$4) w l lw 4 dt 2 title "PF Pe = 3 dt = 1e-4 theta 70"
+pause -1
+
+set logscale x
+replot
+
+pause -1
+
+set logscale y
+replot
+
+pause -1

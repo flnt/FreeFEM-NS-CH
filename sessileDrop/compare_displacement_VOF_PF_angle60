@@ -1,0 +1,19 @@
+set key top left
+plot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.00638054_a0.5_LEVEL9" u 1:(-1 + 2*$2 + 0.00638054*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 0.5 LEVEL 9"
+replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.00638054_a0.5_LEVEL11" u 1:(-1 + 2*$2 + 0.00638054*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 0.5 LEVEL 11"
+replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.00902345_a1_LEVEL9" u 1:(-1 + 2*$2 + 0.00902345*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 1"
+# replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.0110514_a1.5_LEVEL9" u 1:(-1 + 2*$2 + 0.0110514*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 1.5"
+# replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.0127611_a2_LEVEL9" u 1:(-1 + 2*$2 + 0.0127611*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 2"
+# replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.0142673_a2.5_LEVEL9" u 1:(-1 + 2*$2 + 0.0142673*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 2.5"
+# replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.0156291_a3_LEVEL9" u 1:(-1 + 2*$2 + 0.0156291*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 3"
+# replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.0168813_a3.5_LEVEL9" u 1:(-1 + 2*$2 + 0.0168813*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 3.5"
+# replot "~/basilisk/contactline/toy_AFZ/TOY1_Ca0.0212_Re3.978_angle60_eps0.0180469_a4_LEVEL9" u 1:(-1 + 2*$2 + 0.0180469*sin(3.1416*$5/180.)) w l lw 2 title "VOF toy a = 4"
+replot "stats_R1_tfin1.5_Ca0.0212_Cn0.01_Pe3_Re3.978_mu1e-2_rho1e-2_theta60_n10_refI12_mGrw1.2_dt5e-5" u 1:(-1-$2+$4) w l lw 4 dt 2 title "PF dt = 5e-5"
+replot "stats_R1_tfin1.5_Ca0.0212_Cn0.01_Pe3_Re3.978_mu1e-2_rho1e-2_theta60_n10_refI12_mGrw1.2_dt1e-4" u 1:(-1-$2+$4) w l lw 4 dt 2 title "PF dt = 1e-4"
+
+pause -1
+
+set logscale x
+replot
+
+pause -1
