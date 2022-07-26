@@ -24,7 +24,7 @@ replot "~/basilisk/contactline/toy_AZF/TOY1_Ca0.0212_Re3.978_angle70_eps0.012106
 # replot "~/basilisk/contactline/newtoy_AZF/NEWTOY1_Ca0.0212_Re3.978_angle60_a3_LEVEL9" u 1:(-1 + 2*$2) w l lw 2 lt rgb "red" title "VOF newtoy a = 3"
 # replot "../refined_sessile/stats.txt" u 1:(-1-$2+$4) w l lw 4 dt 2 lt rgb "black" title "PF dt = 1e-4 theta 60"
 # replot "stats_Ca0.0212_Cn0.01_Pe5_Re3.978_mu1e-2_rho1e-2_theta70_n10_refI12_mGrw1.2_dt1e-4" u 1:(-1-$2+$4) w p ps 0.5 lt rgb "black" title "PF Pe = 5 dt = 1e-4 theta 70"
-replot "stats.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "black" title "PF Pe = 3 dt = 5e-5 theta 70"
+replot "stats_Pe3" u 1:(-1-$2+$4) w p ps 1 lt rgb "black" title "PF Pe = 3 dt = 5e-5 theta 70"
 # pause -1
 set term pngcairo fontscale 2.75 size 1920, 1080
 set output "~/All/Presentations/Toy_AZF/figures/displacement_PF_vs_VOF_toy.png"
