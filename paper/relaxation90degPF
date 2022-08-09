@@ -1,0 +1,27 @@
+set key bottom right
+set xlabel "dimensionless time"
+set ylabel "dimensionless dislpacement"
+
+# set xr [0:0.2]
+plot "stats_Pe0.01" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 0.01"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe0.01_LEVEL8" u 1:(-2*0.472194 + 2*$2) w l lw 2 title "VOF Pe = 0.01"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe0.1_LEVEL8" u 1:(-2*0.496610 + 2*$2) w l lw 2 title "VOF Pe = 0.1"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe1_LEVEL8" u 1:(-2*0.499380 + 2*$2) w l lw 2 title "VOF Pe = 1.0"
+# replot "~/basilisk/contactline/toy_AZF_delta/SLIP0_Ca0.0212_Re3.978_angle70_Pe0.01_LEVEL8" u 1:(-2*0.472194 + 2*$2) w l lw 2 title "VOF delta Pe = 0.01"
+# replot "~/basilisk/contactline/toy_AZF_delta/SLIP0_Ca0.0212_Re3.978_angle70_Pe0.1_LEVEL8" u 1:(-2*0.496610 + 2*$2) w l lw 2 title "VOF delta Pe = 0.1"
+replot "stats_Pe0.1" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 0.1"
+replot "stats_Pe1.0" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 1.0"
+# replot "stats_Pe5.0" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 5.0"
+# replot "stats_Pe10.0" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 10.0"
+# replot "stats_Pe20.0" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 20.0"
+# replot "stats_Pe50.0" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 50.0"
+# replot "stats_Pe100.0" u 1:(-1-$2+$4) w l lw 2 title "PF Pe = 100.0"
+
+pause -1
+
+
+set logscale x
+replot
+
+pause -1
+

@@ -127,7 +127,7 @@ func initC = tanh((x+idA/2)/sqrt(2)/Cn)-tanh((x-idA/2)/sqrt(2)/Cn)-1;
 
 // Define the mesh (1 - bottom, 2 - right, 3 - top, 4 - left), plot
 mesh Th = square((xmax-xmin)*n,(ymax-ymin)*n,[xmin+(xmax-xmin)*x,ymin+(ymax-ymin)*y]);
-plot(Th);
+// plot(Th);
 
 // Define needed FE spaces and functions
 fespace Ph2 (Th,P2,periodic=[[2,y],[4,y]]);
@@ -406,7 +406,7 @@ else
 
 // Plot initial mesh and pf distribution
 //plot(t,fill=1,value=1);
-plot(Th);
+// plot(Th);
 //plot(u,fill=1,value=1);
 //plot(c,fill=1,value=1);
 // plot(fi,fill=1,value=1);
@@ -450,7 +450,7 @@ while(NstedChck < Nsted)
     cout << " ";
     solveNonLinNSeq
     getMaxCFL
-    plot(c,fill=1,value=1);
+    // plot(c,fill=1,value=1);
     // plot(Th);    
     getInterfGeom
     updCLcoord

@@ -51,7 +51,7 @@ real Pe  = 3.0;      // Small Pe number - seems that I need more non-lin iterati
 real Re  = 3.978;
 real mu2 = 1e-2;
 real rho2= 1e-2;
-real thE = 70.0/180.0*pi;
+real thE = 90.0/180.0*pi;
 real mufa= 0.0;
 real mufr= 0.0;
 
@@ -76,7 +76,7 @@ real refI  = 16.0; // Refinement factor for the interface
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Other parameters, time step, duration, save, tolerances, etc.
-real dt    = 0.0005;
+real dt    = 5e-5;
 real tfin  = 1.0;
 real tout  = tfin/10.;
 int  dref  = 10; // Number of time-steps between mesh adaption

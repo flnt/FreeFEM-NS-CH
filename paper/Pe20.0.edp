@@ -47,11 +47,11 @@ real UimpNd = Uimp/8.09;
 real Ca  = 0.0212;
 real Cn  = 0.01;
 // According to Yue sharp interface, Pe < 16*sqrt(mu)*Ca/Cn = 18.46 "20.655911179772893" (for these parameters)
-real Pe  = 2.0;      // Small Pe number - seems that I need more non-lin iterations; or smaller time step
+real Pe  = 20.0;      // Small Pe number - seems that I need more non-lin iterations; or smaller time step
 real Re  = 3.978;
 real mu2 = 1e-2;
 real rho2= 1e-2;
-real thE = 90.0/180.0*pi;
+real thE = 70.0/180.0*pi;
 real mufa= 0.0;
 real mufr= 0.0;
 
@@ -77,8 +77,8 @@ real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Other parameters, time step, duration, save, tolerances, etc.
 real dt    = 5e-5;
-real tfin  = 1.0;
-real tout  = tfin/10.;
+real tfin  = 0.2;
+real tout  = tfin/20.;
 int  dref  = 10; // Number of time-steps between mesh adaption
 real tolNI = 1.0e-9; // Tolerance for non-linear iterations
 int  mni   = 1000;
@@ -97,7 +97,7 @@ border bnd4(t=ymax,ymin) {x=xmin; y=t;       label=4; }
 
 mesh Th = buildmesh(bnd1(n*(xmax-xmin))+bnd2(n*(ymax-ymin))+bnd3(n*(xmax-xmin))+bnd4(n*(ymax-ymin)) );
 
-plot(Th);
+// plot(Th);
 
 // Define needed FE spaces and functions
 fespace Ph2 (Th,P2,periodic=[[2,y],[4,y]]);
@@ -266,7 +266,7 @@ getAdaptMesh
 // Final initialisation of the function
 [fi,c] = [0,initC];
 
-lineProbeSave(-4.0,-0.5,4.0,0.5,600,Th,c,"sample_c.txt")
+lineProbeSave(-4.0,-0.5,4.0,0.5,600,Th,c,"sample_Pe20.0")
 
 // Getting updated CL coordinates for slip transition
 
@@ -287,18 +287,18 @@ if(bNew==1)
     nAout=0; nAdapt=0; nRest=0;
     curt=0.0;
     // save output in VTK format
-    savevtk("dataPe2/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+    savevtk("data_Pe20.0/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
     // save the data in FF++ format
-    savemesh(Th,"dataPe2/out_"+nAout+".msh");
+    savemesh(Th,"data_Pe20.0/out_"+nAout+".msh");
     {
-    ofstream resfile("dataPe2/out_"+nAout+".dat");
+    ofstream resfile("data_Pe20.0/out_"+nAout+".dat");
     resfile << u[];
     resfile << fi[];
     }
     nAout++;
     // Prepare the statistics file (text file with drop displacement, angles)
     {
-    ofstream resfile("statsPe2.txt");
+    ofstream resfile("stats_Pe20.0");
     xct = int2d(Th)(x*(c+1)/2)/int2d(Th)((c+1)/2);
     yct = int2d(Th)(y*(c+1)/2)/int2d(Th)((c+1)/2);
     resfile << "# t, xL, yL, xR, yR, theta_L [deg], thetaS_L [deg], theta_R [deg], thetaS_R [deg], ycom, xcom" << endl;
@@ -307,21 +307,21 @@ if(bNew==1)
 }
 else if(bNew==0)
 {
-    ifstream restxt("dataPe2/restart.txt");
+    ifstream restxt("data_Pe20.0/restart.txt");
     restxt >> nAout; restxt >> nAdapt; restxt >> curt;
     cout << "Read previous state with curt = " << curt << endl;
-    Th = readmesh("dataPe2/out_"+nAout+".msh");
+    Th = readmesh("data_Pe20.0/out_"+nAout+".msh");
     [uu,vv,pp] = [0,0,0]; [fifi,cc]  = [0,0];
     [u,v,p]    = [0,0,0]; [uO,vO,pO] = [0,0,0];
     [fi,c] = [0,0]; [fiO,cO] = [0,0];
-    ifstream resdat("dataPe2/out_"+nAout+".dat");
+    ifstream resdat("data_Pe20.0/out_"+nAout+".dat");
     resdat >> uO[];
     resdat >> fiO[];
     nAout++;
     // Process statistics file
-    exec("mv statsPe2.txt stats_old.txt");
+    exec("mv stats_Pe20.0 stats_old.txt");
     ifstream prevst("stats_old.txt");
-    ofstream updtst("statsPe2.txt");
+    ofstream updtst("stats_Pe20.0");
     updtst << "# t, xL, yL, xR, yR, theta_L [deg], thetaS_L [deg], theta_R [deg], thetaS_R [deg], ycom, xcom" << endl;
     string tmp;
     for(int i=0; i<16; i++) prevst >> tmp;
@@ -347,7 +347,7 @@ else
 
 //plot(u,fill=1,value=1);
 //plot(c,fill=1,value=1);
-plot(c,fill=1,value=1);
+// plot(c,fill=1,value=1);
 
 
 // // Time stepping
@@ -377,7 +377,7 @@ for(int i=1; i<nTsteps; i++)
         solveNonLinNSeq
         cout << ", " << maxVN << endl;
         nAdapt++;
-        //plot(Th);
+        // plot(Th);
         // getInterfGeom
         nAdapt = 0;
     }
@@ -401,7 +401,7 @@ for(int i=1; i<nTsteps; i++)
     yct = int2d(Th)(y*(c+1)/2)/int2d(Th)((c+1)/2);
     xct = int2d(Th)(x*(c+1)/2)/int2d(Th)((c+1)/2);
     {
-    ofstream resfile("statsPe2.txt",append);
+    ofstream resfile("stats_Pe20.0",append);
     resfile << curt << " " << xibot(0) << " " << 0.0 << " " << xibot(1) << " " << 0.0 << " " << theta(0) << " " << thetaS(0) << " " << theta(1) << " " << thetaS(1) << " " << yct << " " << xct << endl;
     }
     
@@ -415,13 +415,13 @@ for(int i=1; i<nTsteps; i++)
            + int1d(Th,1,2,3,4)( (-v*N.x+u*N.y)*vstr ) // No-slip gives zero-derivative
            + int2d(Th)( (dx(v) - dy(u))*vstr );
         // save output in VTK format
-        savevtk("dataPe2/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+        savevtk("data_Pe20.0/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
         // save the data in FF++ format
-        savemesh(Th,"dataPe2/out_"+nAout+".msh");
-        ofstream resfile("dataPe2/out_"+nAout+".dat");
+        savemesh(Th,"data_Pe20.0/out_"+nAout+".msh");
+        ofstream resfile("data_Pe20.0/out_"+nAout+".dat");
         resfile << u[];
         resfile << fi[];
-        ofstream restxt("dataPe2/restart.txt");
+        ofstream restxt("data_Pe20.0/restart.txt");
         restxt << nAout << endl; restxt << nAdapt << endl;
         restxt << curt << endl; 
         nAout++;
@@ -439,7 +439,7 @@ for(int i=1; i<nTsteps; i++)
     // plot(c,fill=1,value=1);
     // plot(c,fill=1,value=1);
     // plot(Th, c);
-    plot(c,fill=1,value=1);
+    // plot(c,fill=1,value=1);
 }
 
 // Final outputs after the end of the simulation
@@ -449,10 +449,10 @@ ofstream flag("simdone");
 flag << 1 << endl;
 cout << " Saving final data to file!" << endl;
 // save output in VTK format
-savevtk("dataPe2/out_Final.vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+savevtk("data_Pe20.0/out_Final.vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
 // save the data in FF++ format
-savemesh(Th,"dataPe2/out_Final.msh");
-ofstream resfile("dataPe2/out_Final.dat");
+savemesh(Th,"data_Pe20.0/out_Final.msh");
+ofstream resfile("data_Pe20.0/out_Final.dat");
 resfile << u[];
 resfile << fi[];
 }

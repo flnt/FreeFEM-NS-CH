@@ -1,0 +1,48 @@
+set key bottom right
+set xlabel "dimensionless time"
+set ylabel "dimensionless dislpacement"
+plot "stats.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "black" title "PF Pe = 0.5"
+replot "statsPe1.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "red" title "PF Pe = 1"
+replot "statsPe2.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "blue" title "PF Pe = 2"
+replot "statsPe3.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "green" title "PF Pe = 3"
+replot "statsPe10.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "purple" title "PF Pe = 10"
+
+pause -1
+
+set logscale x
+replot
+
+pause -1
+
+unset logscale x
+
+plot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe0.5_LEVEL10" u 1:(-1 + 2*$2 + 2*0.0221028*sin(3.1416*72/180)) w l lw 2 lt rgb "black" title "VOF Pe = 0.5"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe1_LEVEL10" u 1:(-1 + 2*$2 + 2*0.0156291*sin(3.1416*72/180)) w l lw 2 lt rgb "red" title "VOF Pe = 1"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe2_LEVEL10" u 1:(-1 + 2*$2 + 2*0.0110514*sin(3.1416*72/180)) w l lw 2 lt rgb "blue" title "VOF Pe = 2"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe5_LEVEL9" u 1:(-1 + 2*$2 + 2*0.0069895317*sin(3.1416*72/180)) w l lw 2 lt rgb "green" title "VOF Pe = 5"
+
+pause -1
+
+set logscale x
+replot
+
+pause -1
+
+unset logscale x
+
+plot "stats.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "black" title "PF Pe = 0.5"
+replot "statsPe1.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "red" title "PF Pe = 1"
+replot "statsPe2.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "blue" title "PF Pe = 2"
+replot "statsPe3.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "green" title "PF Pe = 3"
+replot "statsPe10.txt" u 1:(-1-$2+$4) w p ps 1 lt rgb "purple" title "PF Pe = 10"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe0.5_LEVEL10" u 1:(-1 + 2*$2 + 2*0.0221028*sin(3.1416*72/180)) w l lw 2 lt rgb "black" title "VOF Pe = 0.5"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe1_LEVEL10" u 1:(-1 + 2*$2 + 2*0.0156291*sin(3.1416*72/180)) w l lw 2 lt rgb "red" title "VOF Pe = 1"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe2_LEVEL10" u 1:(-1 + 2*$2 + 2*0.0110514*sin(3.1416*72/180)) w l lw 2 lt rgb "blue" title "VOF Pe = 2"
+replot "~/basilisk/contactline/toy_AZF/SLIP0_Ca0.0212_Re3.978_angle70_Pe5_LEVEL9" u 1:(-1 + 2*$2 + 2*0.0069895317*sin(3.1416*72/180)) w l lw 2 lt rgb "green" title "VOF Pe = 5"
+
+pause -1
+
+set logscale x
+replot
+
+pause -1
