@@ -30,20 +30,14 @@ load "Element_P3";
 
 include "include_postProc.idp"
 
-// Wall speed ratio (1 corresponds to single wall velocity Uw = 10/6 m/s = 0.16667 m/s, 2 - 0.33333 m/s, etc.)
-real Sp  = 2.0;
-
-// Interface thickness adjustment (1 corresponds to eps = 0.7 nm, 2 to 1.4 nm, etc.)
-real Tn  = 1.0;
-
 // Contact angle specific parameters (including changes due to calibration)
-real thE = 90.0/180.0*pi;//127.4/180.0*pi;//
+real thE = 90.0/180.0*pi;
 real Pe  = 100.0; // Calibrated
 real mufa= 0.0;
 real mufr= 0.0;
 real ls  = 0.0; // Slip length as obtained from MD
 
-// real thE = 90.0/180.0*pi;
+// real thE = 95.0/180.0*pi;
 // real Pe  = 1.091755*Sp*Tn; // Calibrated
 // real mufa= 0.0;
 // real mufr= 0.0;
@@ -62,14 +56,9 @@ real ls  = 0.0; // Slip length as obtained from MD
 // real ls  = 0.0;    // Observe, modify weak form of Navier-Stokes!
 
 // Other physical parameters
-// real Ca  = 1.06;
-// real Cn  = 0.01;    // 0.7 nm
-// real Re  = 3.978;
-// real mu2 = 1e-2;
-// real rho2= 1e-2;
-real Ca  = 2.120000e-02;
+real Ca  = 1.06;
 real Cn  = 0.01;    // 0.7 nm
-real Re  = 3.978000;
+real Re  = 3.978;
 real mu2 = 1e-2;
 real rho2= 1e-2;
 // Domain extent
@@ -79,20 +68,16 @@ real ymin = -0.5;
 real ymax =  0.5;
 
 // Mesh resolution
-// int  n     = 12; // Number of segments per unit length
-// real refI  = 20.0; // Refinement factor for the interface
-// real mGrw  = 1.2;  // Growth rate of the mesh elements
-
 int  n     = 8; // Number of segments per unit length
-real refI  = 15.0/Tn; // Refinement factor for the interface
+real refI  = 12.0; // Refinement factor for the interface
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Time step, duration, save, tolerances, etc.
-real dt    = 0.0005;
-real tfin  = 10;
+real dt    = 0.002;
+real tfin  = 10.0;
 real tout  = 0.02;
 int  dref  = 40; // Number of time-steps between mesh adaption
-int  bNew  = 1; // 1-start new simulation; 0-restart from previous state
+int  bNew  = 0; // 1-start new simulation; 0-restart from previous state
 // Steady drop tolerance to finish the simulation (time derivative of position)
 real tolST = 2.0e-4;
 int  Nsted = 10;
@@ -101,7 +86,7 @@ int  Nsted = 10;
 int Icur, Imax = 100;
 
 // Initial drop area
-real idA = 1.0;
+real idA = 1.;
 // New initial function taking into account the contact angle (should work both > and < 90 deg)
 // real thEi = thE;
 // if(thE < pi/2) thEi = pi-thE;
@@ -127,7 +112,7 @@ func initC = tanh((x+idA/2)/sqrt(2)/Cn)-tanh((x-idA/2)/sqrt(2)/Cn)-1;
 
 // Define the mesh (1 - bottom, 2 - right, 3 - top, 4 - left), plot
 mesh Th = square((xmax-xmin)*n,(ymax-ymin)*n,[xmin+(xmax-xmin)*x,ymin+(ymax-ymin)*y]);
-// plot(Th);
+plot(Th);
 
 // Define needed FE spaces and functions
 fespace Ph2 (Th,P2,periodic=[[2,y],[4,y]]);
@@ -308,7 +293,8 @@ problem NStokesExpl([u,v,p],[uu,vv,pp],solver=sparsesolver,master=0)
     + int2d(Th)(  rho *(-(uO*uu+vO*vv) - dt*(uO*dx(uO)+vO*dy(uO))*uu - dt*(uO*dx(vO)+vO*dy(vO))*vv )
                  - 3/(2*sqrt(2))*dt*fiO*(dx(cO)*uu+dy(cO)*vv)/(Cn*Ca*Re) )
     // + int1d(Th,1,3)( dt/Re*mu/ls*u*uu ) + int1d(Th,1,3)(-dt/Re*mu/ls*(0.5*N.y)*uu )  // Comment out for ls = 0!!!
-    + on(1,3,u=0.5*N.y,v=0);// + on(1,3,v=0);  // Modify to "+ on(1,3,u=0.5*N.y,v=0);" for ls = 0!!!
+    // + on(1,3,v=0);  // Modify to "+ on(1,3,u=0.5*N.y,v=0);" for ls = 0!!!
+    + on(1,3,u=0.04*N.y,v=0);
                
 // Initialisation
 [fi,c] = [0,initC];
@@ -329,7 +315,7 @@ lineProbeSave(-4.0,-0.5,4.0,0.5,600,Th,c,"sample_c.txt")
 updCLcoord
 
 // Velocity is initialised after slip can be computed
-[u,v,p] = [y,0,0];
+[u,v,p] = [0,0,0];
 
 // Get the interface iso-lines and coordinates at walls
 getInterfGeom
@@ -406,9 +392,9 @@ else
 
 // Plot initial mesh and pf distribution
 //plot(t,fill=1,value=1);
-// plot(Th);
+plot(Th);
 //plot(u,fill=1,value=1);
-//plot(c,fill=1,value=1);
+plot(c,fill=1,value=1);
 // plot(fi,fill=1,value=1);
 
 
@@ -450,8 +436,8 @@ while(NstedChck < Nsted)
     cout << " ";
     solveNonLinNSeq
     getMaxCFL
-    // plot(c,fill=1,value=1);
-    // plot(Th);    
+    plot(c,fill=1,value=1);
+    // plot(u,fill=1,value=1);    
     getInterfGeom
     updCLcoord
     dxNew = xstop(0)-xsbot(0);
@@ -488,17 +474,17 @@ while(NstedChck < Nsted)
         divChck = int2d(Th)( dx(u)+dy(v) );
         cout << " Divergence of flow field = " << divChck << endl;
         // plot(fi,fill=1,value=1);
-        // plot(c,fill=1,value=1);
+        plot(c,fill=1,value=1);
         // plot(u,fill=1,value=1);
-        // plot(Th);
+        // plot(u,fill=1,value=1);
     }
     // Prepare for the next time step
     uO[] = u[]; fiO[] = fi[]; dxOld = dxNew;
     nAdapt++;
     // plot(fi,fill=1,value=1);
-    // plot(c,fill=1,value=1);
+    plot(c,fill=1,value=1);
     // plot(u,fill=1,value=1);
-    // plot(Th);
+    // plot(u,fill=1,value=1);
 }
 
 // Final outputs after the end of the simulation

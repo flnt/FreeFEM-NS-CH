@@ -35,7 +35,7 @@ include "include_postProc.idp"
 // Ca = muw*U/sigma = 0.1 -> Uref = 8.09 m/s, Tref = L/U = 0.01545 ms
 
 // Impact velocity [m/s]
-real Uimp = 2.0;
+real Uimp = -2.0;
 
 // Render impact velocity non-dimensional
 real UimpNd = Uimp/8.09;
@@ -67,14 +67,14 @@ real pa = 60.0/180.0*pi; // tilt angle
 // Parameters of the drop
 real dR = 1.0;  // Radius
 real dxc= 0.0;  // x coordinate
-real dyc= 1.0+ph;  // y coordinate
+real dyc= 0.7+ph;  // y coordinate
 real yct= dyc; // Variable to track the y coordinate of center of mass
 real xct= dxc; // -;- x coordinate -;-
 
 
 // Mesh resolution
-int  n     = 12; // Number of segments per unit length
-real refI  = 15.0; // Refinement factor for the interface
+int  n     = 7; // Number of segments per unit length
+real refI  = 4.0; // Refinement factor for the interface
 // refI = 30.0;
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
@@ -405,8 +405,8 @@ while(maxCFL > 1e-4)
     cout << " ";
     solveNonLinNSeq
     getMaxCFL
-    // plot(c,fill=1,value=1);
-    plot(Th);    
+    plot(c,fill=1,value=1);
+    // plot(Th);    
     //getInterfGeom
     // updCLcoord
     // dxNew = xstop(0)-xsbot(0);
@@ -453,8 +453,8 @@ while(maxCFL > 1e-4)
     uO[] = u[]; fiO[] = fi[]; dxOld = dxNew;
     nAdapt++;
     // plot(fi,fill=1,value=1);
-    plot(Th); 
-    // plot(c,fill=1,value=1);
+    // plot(Th); 
+    plot(c,fill=1,value=1);
     // plot(u,fill=1,value=1);
 }
 
