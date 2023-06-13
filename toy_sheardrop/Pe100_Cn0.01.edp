@@ -68,8 +68,8 @@ real ymin = -0.5;
 real ymax =  0.5;
 
 // Mesh resolution
-int  n     = 8; // Number of segments per unit length
-real refI  = 12.0; // Refinement factor for the interface
+int  n     = 10; // Number of segments per unit length
+real refI  = 25.0; // Refinement factor for the interface
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Time step, duration, save, tolerances, etc.
@@ -337,39 +337,39 @@ if(bNew==1)
     nAout=0; nAdapt=0; nRest=0;
     curt=0.0;
     // save output in VTK format
-    savevtk("data/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+    savevtk("Pe100_Cn0.01/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
     // save the data in FF++ format
-    savemesh(Th,"data/out_"+nAout+".msh");
+    savemesh(Th,"Pe100_Cn0.01/out_"+nAout+".msh");
     {
-    ofstream resfile("data/out_"+nAout+".dat");
+    ofstream resfile("Pe100_Cn0.01/out_"+nAout+".dat");
     resfile << u[];
     resfile << fi[];
     }
     nAout++;
     // Prepare the statistics file (text file with drop displacement, angles)
     {
-    ofstream resfile("stats.txt");
+    ofstream resfile("stats_Pe100_Cn0.01.txt");
     resfile << "# t, dx, theta_adv [deg], theta_rec [deg]" << endl;
     resfile << 0.0 << " " << xitop(0)-xibot(0) << " " << thetaLeft(1) << " " << thetaLeft(0) << endl;
     }
 }
 else if(bNew==0)
 {
-    ifstream restxt("data/restart.txt");
+    ifstream restxt("Pe100_Cn0.01/restart.txt");
     restxt >> nAout; restxt >> nAdapt; restxt >> curt;
     cout << "Read previous state with curt = " << curt << endl;
-    Th = readmesh("data/out_"+nAout+".msh");
+    Th = readmesh("Pe100_Cn0.01/out_"+nAout+".msh");
     [uu,vv,pp] = [0,0,0]; [fifi,cc]  = [0,0];
     [u,v,p]    = [0,0,0]; [uO,vO,pO] = [0,0,0];
     [fi,c] = [0,0]; [fiO,cO] = [0,0];
-    ifstream resdat("data/out_"+nAout+".dat");
+    ifstream resdat("Pe100_Cn0.01/out_"+nAout+".dat");
     resdat >> uO[];
     resdat >> fiO[];
     nAout++;
     // Process statistics file
-    exec("mv stats.txt stats_old.txt");
+    exec("mv stats_Pe100_Cn0.01.txt stats_old.txt");
     ifstream prevst("stats_old.txt");
-    ofstream updtst("stats.txt");
+    ofstream updtst("stats_Pe100_Cn0.01.txt");
     updtst << "# t, dx, theta_adv [deg], theta_rec [deg]" << endl;
     string tmp;
     for(int i=0; i<7; i++) prevst >> tmp;
@@ -436,7 +436,7 @@ while(NstedChck < Nsted)
     cout << " ";
     solveNonLinNSeq
     getMaxCFL
-    // plot(c,fill=1,value=1);
+    plot(c,fill=1,value=1);
     // plot(u,fill=1,value=1);    
     getInterfGeom
     updCLcoord
@@ -446,7 +446,7 @@ while(NstedChck < Nsted)
     cout << " CFL " << maxCFL << " dx " << dxNew << " tadv " << thetaLeft(1) << " trec " << thetaLeft(0) << " dxdt " << dxdtChck << endl;
     // Output to the stats file
     {
-    ofstream resfile("stats.txt",append);
+    ofstream resfile("stats_Pe100_Cn0.01.txt",append);
     resfile << curt << " " << dxNew << " " << thetaLeft(1) << " " << thetaLeft(0) << endl;
     }
     
@@ -460,13 +460,13 @@ while(NstedChck < Nsted)
            + int1d(Th,1,2,3,4)( (-v*N.x+u*N.y)*vstr ) // No-slip gives zero-derivative
            + int2d(Th)( (dx(v) - dy(u))*vstr );
         // save output in VTK format
-        savevtk("data/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+        savevtk("Pe100_Cn0.01/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
         // save the data in FF++ format
-        savemesh(Th,"data/out_"+nAout+".msh");
-        ofstream resfile("data/out_"+nAout+".dat");
+        savemesh(Th,"Pe100_Cn0.01/out_"+nAout+".msh");
+        ofstream resfile("Pe100_Cn0.01/out_"+nAout+".dat");
         resfile << u[];
         resfile << fi[];
-        ofstream restxt("data/restart.txt");
+        ofstream restxt("Pe100_Cn0.01/restart.txt");
         restxt << nAout << endl; restxt << nAdapt << endl;
         restxt << curt << endl; 
         nAout++;
@@ -474,7 +474,7 @@ while(NstedChck < Nsted)
         divChck = int2d(Th)( dx(u)+dy(v) );
         cout << " Divergence of flow field = " << divChck << endl;
         // plot(fi,fill=1,value=1);
-        // plot(c,fill=1,value=1);
+        plot(c,fill=1,value=1);
         // plot(u,fill=1,value=1);
         // plot(u,fill=1,value=1);
     }
@@ -482,7 +482,7 @@ while(NstedChck < Nsted)
     uO[] = u[]; fiO[] = fi[]; dxOld = dxNew;
     nAdapt++;
     // plot(fi,fill=1,value=1);
-    // plot(c,fill=1,value=1);
+    plot(c,fill=1,value=1);
     // plot(u,fill=1,value=1);
     // plot(u,fill=1,value=1);
 }
@@ -494,10 +494,10 @@ ofstream flag("simdone");
 flag << 1 << endl;
 cout << " Saving final data to file!" << endl;
 // save output in VTK format
-savevtk("data/out_Final.vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+savevtk("Pe100_Cn0.01/out_Final.vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
 // save the data in FF++ format
-savemesh(Th,"data/out_Final.msh");
-ofstream resfile("data/out_Final.dat");
+savemesh(Th,"Pe100_Cn0.01/out_Final.msh");
+ofstream resfile("Pe100_Cn0.01/out_Final.dat");
 resfile << u[];
 resfile << fi[];
 }

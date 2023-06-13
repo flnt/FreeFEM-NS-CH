@@ -32,7 +32,7 @@ include "include_postProc.idp"
 
 // Contact angle specific parameters (including changes due to calibration)
 real thE = 90.0/180.0*pi;
-real Pe  = 100.0; // Calibrated
+real Pe  = 30.0; // Calibrated
 real mufa= 0.0;
 real mufr= 0.0;
 real ls  = 0.0; // Slip length as obtained from MD
@@ -57,7 +57,7 @@ real ls  = 0.0; // Slip length as obtained from MD
 
 // Other physical parameters
 real Ca  = 1.06;
-real Cn  = 0.01;    // 0.7 nm
+real Cn  = 0.005;    // 0.7 nm
 real Re  = 3.978;
 real mu2 = 1e-2;
 real rho2= 1e-2;
@@ -337,39 +337,39 @@ if(bNew==1)
     nAout=0; nAdapt=0; nRest=0;
     curt=0.0;
     // save output in VTK format
-    savevtk("data/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+    savevtk("Pe30_Cn0.005/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
     // save the data in FF++ format
-    savemesh(Th,"data/out_"+nAout+".msh");
+    savemesh(Th,"Pe30_Cn0.005/out_"+nAout+".msh");
     {
-    ofstream resfile("data/out_"+nAout+".dat");
+    ofstream resfile("Pe30_Cn0.005/out_"+nAout+".dat");
     resfile << u[];
     resfile << fi[];
     }
     nAout++;
     // Prepare the statistics file (text file with drop displacement, angles)
     {
-    ofstream resfile("stats.txt");
+    ofstream resfile("stats_Pe30_Cn0.005.txt");
     resfile << "# t, dx, theta_adv [deg], theta_rec [deg]" << endl;
     resfile << 0.0 << " " << xitop(0)-xibot(0) << " " << thetaLeft(1) << " " << thetaLeft(0) << endl;
     }
 }
 else if(bNew==0)
 {
-    ifstream restxt("data/restart.txt");
+    ifstream restxt("Pe30_Cn0.005/restart.txt");
     restxt >> nAout; restxt >> nAdapt; restxt >> curt;
     cout << "Read previous state with curt = " << curt << endl;
-    Th = readmesh("data/out_"+nAout+".msh");
+    Th = readmesh("Pe30_Cn0.005/out_"+nAout+".msh");
     [uu,vv,pp] = [0,0,0]; [fifi,cc]  = [0,0];
     [u,v,p]    = [0,0,0]; [uO,vO,pO] = [0,0,0];
     [fi,c] = [0,0]; [fiO,cO] = [0,0];
-    ifstream resdat("data/out_"+nAout+".dat");
+    ifstream resdat("Pe30_Cn0.005/out_"+nAout+".dat");
     resdat >> uO[];
     resdat >> fiO[];
     nAout++;
     // Process statistics file
-    exec("mv stats.txt stats_old.txt");
+    exec("mv stats_Pe30_Cn0.005.txt stats_old.txt");
     ifstream prevst("stats_old.txt");
-    ofstream updtst("stats.txt");
+    ofstream updtst("stats_Pe30_Cn0.005.txt");
     updtst << "# t, dx, theta_adv [deg], theta_rec [deg]" << endl;
     string tmp;
     for(int i=0; i<7; i++) prevst >> tmp;
@@ -446,7 +446,7 @@ while(NstedChck < Nsted)
     cout << " CFL " << maxCFL << " dx " << dxNew << " tadv " << thetaLeft(1) << " trec " << thetaLeft(0) << " dxdt " << dxdtChck << endl;
     // Output to the stats file
     {
-    ofstream resfile("stats.txt",append);
+    ofstream resfile("stats_Pe30_Cn0.005.txt",append);
     resfile << curt << " " << dxNew << " " << thetaLeft(1) << " " << thetaLeft(0) << endl;
     }
     
@@ -460,13 +460,13 @@ while(NstedChck < Nsted)
            + int1d(Th,1,2,3,4)( (-v*N.x+u*N.y)*vstr ) // No-slip gives zero-derivative
            + int2d(Th)( (dx(v) - dy(u))*vstr );
         // save output in VTK format
-        savevtk("data/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+        savevtk("Pe30_Cn0.005/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
         // save the data in FF++ format
-        savemesh(Th,"data/out_"+nAout+".msh");
-        ofstream resfile("data/out_"+nAout+".dat");
+        savemesh(Th,"Pe30_Cn0.005/out_"+nAout+".msh");
+        ofstream resfile("Pe30_Cn0.005/out_"+nAout+".dat");
         resfile << u[];
         resfile << fi[];
-        ofstream restxt("data/restart.txt");
+        ofstream restxt("Pe30_Cn0.005/restart.txt");
         restxt << nAout << endl; restxt << nAdapt << endl;
         restxt << curt << endl; 
         nAout++;
@@ -494,10 +494,10 @@ ofstream flag("simdone");
 flag << 1 << endl;
 cout << " Saving final data to file!" << endl;
 // save output in VTK format
-savevtk("data/out_Final.vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+savevtk("Pe30_Cn0.005/out_Final.vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
 // save the data in FF++ format
-savemesh(Th,"data/out_Final.msh");
-ofstream resfile("data/out_Final.dat");
+savemesh(Th,"Pe30_Cn0.005/out_Final.msh");
+ofstream resfile("Pe30_Cn0.005/out_Final.dat");
 resfile << u[];
 resfile << fi[];
 }
