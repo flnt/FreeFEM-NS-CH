@@ -69,13 +69,13 @@ real ymax =  0.5;
 
 // Mesh resolution
 int  n     = 8; // Number of segments per unit length
-real refI  = 12.0; // Refinement factor for the interface
+real refI  = 15.0; // Refinement factor for the interface
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Time step, duration, save, tolerances, etc.
 real dt    = 0.004;
-real tfin  = 30.0;
-real tout  = 0.1;
+real tfin  = 10.0;
+real tout  = 0.04;
 int  dref  = 40; // Number of time-steps between mesh adaption
 int  bNew  = 1; // 1-start new simulation; 0-restart from previous state
 // Steady drop tolerance to finish the simulation (time derivative of position)
@@ -115,10 +115,10 @@ mesh Th = square((xmax-xmin)*n,(ymax-ymin)*n,[xmin+(xmax-xmin)*x,ymin+(ymax-ymin
 // plot(Th);
 
 // Define needed FE spaces and functions
-fespace Ph2 (Th,P2,periodic=[[2,y],[4,y]]);
+fespace Ph2 (Th,P1,periodic=[[2,y],[4,y]]);
 fespace Ph1 (Th,P1,periodic=[[2,y],[4,y]]);
 fespace PFh1(Th,[P1,P1],periodic=[[2,y],[4,y]]);
-fespace FLh (Th,[P2,P2,P1],periodic=[[2,y],[4,y]]);
+fespace FLh (Th,[P1,P1,P1],periodic=[[2,y],[4,y]]);
 FLh [u,v,p], [uu,vv,pp], [uO,vO,pO];
 Ph2 str, vstr;
 PFh1 [fi,c], [fifi,cc], [fiO,cO];
