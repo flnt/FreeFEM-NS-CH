@@ -73,7 +73,7 @@ real refI  = 12.0; // Refinement factor for the interface
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Time step, duration, save, tolerances, etc.
-real dt    = 0.004;
+real dt    = 0.002;
 real tfin  = 30.0;
 real tout  = 0.1;
 int  dref  = 40; // Number of time-steps between mesh adaption
@@ -294,7 +294,9 @@ problem NStokesExpl([u,v,p],[uu,vv,pp],solver=sparsesolver,master=0)
                  - 3/(2*sqrt(2))*dt*fiO*(dx(cO)*uu+dy(cO)*vv)/(Cn*Ca*Re) )
     // + int1d(Th,1,3)( dt/Re*mu/ls*u*uu ) + int1d(Th,1,3)(-dt/Re*mu/ls*(0.5*N.y)*uu )  // Comment out for ls = 0!!!
     // + on(1,3,v=0);  // Modify to "+ on(1,3,u=0.5*N.y,v=0);" for ls = 0!!!
-    + on(1,3,u=0.04*N.y,v=0);
+    + on(1,u=-0.02,v=0)
+    + on(3,u=0.02,v=0);
+    // + on(1,3,u=0.04*N.y,v=0);
                
 // Initialisation
 [fi,c] = [0,initC];
