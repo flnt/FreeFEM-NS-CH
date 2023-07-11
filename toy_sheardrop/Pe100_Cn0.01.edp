@@ -32,28 +32,10 @@ include "include_postProc.idp"
 
 // Contact angle specific parameters (including changes due to calibration)
 real thE = 90.0/180.0*pi;
-real Pe  = 100.0; // Calibrated
+real Pe  = 100.0; 
 real mufa= 0.0;
 real mufr= 0.0;
-real ls  = 0.0; // Slip length as obtained from MD
-
-// real thE = 95.0/180.0*pi;
-// real Pe  = 1.091755*Sp*Tn; // Calibrated
-// real mufa= 0.0;
-// real mufr= 0.0;
-// real ls  = 0.0;    // Observe, modify weak form of Navier-Stokes!
-
-// real thE = 68.8/180.0*pi;
-// real Pe  = 3.37024*Sp*Tn; // According to sharp int., Pe < 16*sqrt(mu)*Ca/Cn = 3.6786 (Sp = 1, Tn = 1)   
-// real mufa= 2.361047;
-// real mufr= 2.361047; // Calibrated
-// real ls  = 0.0;    // Observe, modify weak form of Navier-Stokes!
-
-// real thE = 37.8/180.0*pi;
-// real Pe  = 3.37024*Sp*Tn; // According to sharp int., Pe < 16*sqrt(mu)*Ca/Cn = 3.6786 (Sp = 1, Tn = 1)
-// real mufa= 11.835867;
-// real mufr= 11.835867; // Calibrated
-// real ls  = 0.0;    // Observe, modify weak form of Navier-Stokes!
+real ls  = 0.0; 
 
 // Other physical parameters
 real Ca  = 1.06;
@@ -68,13 +50,13 @@ real ymin = -0.5;
 real ymax =  0.5;
 
 // Mesh resolution
-int  n     = 10; // Number of segments per unit length
-real refI  = 25.0; // Refinement factor for the interface
+int  n     = 8; // Number of segments per unit length
+real refI  = 15.0; // Refinement factor for the interface
 real mGrw  = 1.2;  // Growth rate of the mesh elements
 
 // Time step, duration, save, tolerances, etc.
-real dt    = 0.004;
-real tfin  = 30.0;
+real dt    = 0.002;
+real tfin  = 10.0;
 real tout  = 0.1;
 int  dref  = 40; // Number of time-steps between mesh adaption
 int  bNew  = 1; // 1-start new simulation; 0-restart from previous state
@@ -87,26 +69,7 @@ int Icur, Imax = 100;
 
 // Initial drop area
 real idA = 1.;
-// New initial function taking into account the contact angle (should work both > and < 90 deg)
-// real thEi = thE;
-// if(thE < pi/2) thEi = pi-thE;
-// real thC = 2*thEi-pi;
-// real Rit = 1.0/(2*sin(0.5*thC));
-// real w2  = idA - Rit^2*(thC-sin(thC));
-// real dl  = Rit*(1-cos(0.5*thC));
-// real xRi = Rit - 0.5*w2 - dl;
-// real d2  = Rit^2*(thC-sin(thC)) - dl;
-// if(thE < pi/2) xRi = xRi - Rit + dl - d2 - Rit;
-// cout << thC << " " << Rit << " " << w2 << " " << dl << " " << xRi << endl;
-// int sngC;
-// if     (thE > pi/2) sngC = -1;
-// else if(thE < pi/2) sngC =  1;
 
-// func initC =  (x>=0 && x< 1.7*Rit)*(sngC*tanh((sqrt((x+xRi)^2+y^2)-Rit) /sqrt(2)/Cn))
-//             + (x< 0 && x>-1.7*Rit)*(sngC*tanh((sqrt((x-xRi)^2+y^2)-Rit) /sqrt(2)/Cn))
-//             - (x>= 1.7*Rit || x<= -1.7*Rit);
-
-// // Initial function for thE = 90 degrees
 func initC = tanh((x+idA/2)/sqrt(2)/Cn)-tanh((x-idA/2)/sqrt(2)/Cn)-1;
 
 
@@ -292,9 +255,9 @@ problem NStokesExpl([u,v,p],[uu,vv,pp],solver=sparsesolver,master=0)
                                        + dt*(u *dx(uO)+v *dy(uO))*uu + dt*(u *dx(vO)+v *dy(vO))*vv )  )
     + int2d(Th)(  rho *(-(uO*uu+vO*vv) - dt*(uO*dx(uO)+vO*dy(uO))*uu - dt*(uO*dx(vO)+vO*dy(vO))*vv )
                  - 3/(2*sqrt(2))*dt*fiO*(dx(cO)*uu+dy(cO)*vv)/(Cn*Ca*Re) )
-    // + int1d(Th,1,3)( dt/Re*mu/ls*u*uu ) + int1d(Th,1,3)(-dt/Re*mu/ls*(0.5*N.y)*uu )  // Comment out for ls = 0!!!
-    // + on(1,3,v=0);  // Modify to "+ on(1,3,u=0.5*N.y,v=0);" for ls = 0!!!
-    + on(1,3,u=0.04*N.y,v=0);
+    + on(1,u=-0.02,v=0)
+    + on(3,u=0.02,v=0);
+    // + on(1,3,u=0.04*N.y,v=0);
                
 // Initialisation
 [fi,c] = [0,initC];
