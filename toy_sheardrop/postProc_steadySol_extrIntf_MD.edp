@@ -16,11 +16,11 @@ real Lphy = 29.2232;
 real Ymdb = 0.7054;
 
 // Data folder
-string dataf="data";
+string dataf="Pe300_Cn0.01";
 
 // Domain extent
-real xmin = -2.7344;
-real xmax =  2.7344;
+real xmin = -2.0;
+real xmax =  2.0;
 real ymin = -0.5;
 real ymax =  0.5;
 
@@ -44,6 +44,20 @@ func real getXi(real C, real ys, real xl, real xr)
     while(abs(c(cx,ys)-C)>tolBi) {if(sign(c(cx,ys)-C) == sign(c(ax,ys)-C)) ax = cx; else bx = cx; cx = 0.5*(ax+bx);}
     return cx;
 }
+func real getCurvature(real x1, real y1, real x2, real y2, real x3, real y3)
+{
+    real l1 = sqrt((x2 - x1)^2 + (y2 - y1)^2);
+    real l2 = sqrt((x3 - x2)^2 + (y3 - y2)^2);
+    real l3 = sqrt((x3 - x1)^2 + (y3 - y1)^2);
+
+    real sp = (l1 + l2 + l3) / 2;
+
+    real area = sqrt(sp * (sp - l1) * (sp - l2) * (sp - l3));
+
+    real curvature = (4 * area) / (l1 * l2 * l3);
+
+    return curvature;
+}
 macro getInterfGeom()
 {
 for(int i=0; i<N1; i++)
@@ -57,7 +71,6 @@ for(int i=0; i<N1; i++)
 }
 }
 // EOM
-
 // Extract interface from the last solution
 Th = readmesh(dataf+"/out_Final.msh");
 [u,v,p] = [0,0,0]; [fi,c] = [0,0];
@@ -71,20 +84,24 @@ getInterfGeom
 // Rescale the simulation results to MD coordinates
 real xshft = xys1(0,int(N1/2));
 real yshft = xys1(1,0);
-for(int j=0; j<N1; j++)
-{
-    xys1(0,j) = xys1(0,j)*Lphy; xys1(1,j) = Ymdb + (xys1(1,j)-yshft)*Lphy;
-}
+// for(int j=0; j<N1; j++)
+// {
+//     xys1(0,j) = xys1(0,j)*Lphy; xys1(1,j) = Ymdb + (xys1(1,j)-yshft)*Lphy;
+// }
 
 // Output the interface data to file
 {
-ofstream itffile("leftItf_Final_MDcoord.txt");
+ofstream itffile("interface_Pe300_Cn0.01.txt");
 itffile << "# Left interface data, wall y = " << Ymdb << " nm, domain height L = " << Lphy << " nm" << endl;
 itffile << "# x [nm], y [nm], k [1/nm]" << endl;
-for(int j=0; j<N1; j++) itffile << xys1(0,j) << " " << xys1(1,j) << endl;
+for(int j=1; j<N1-1; j++) {
+    real curvature = getCurvature(xys1(0,j-1), xys1(1,j-1), xys1(0,j), xys1(1,j), xys1(0,j+1), xys1(1,j+1));
+    itffile << xys1(0,j) << " " << xys1(1,j) << " " << curvature << endl;
 }
+} 
 
-    
+// getCurvature(xys1(0,j-1), xys1(1,j-1), xys1(0,j), xys1(1,j), xys1(0,j+1), xys1(1,j+1))
+
 // // If needed, can average over number os steady solutions
 // // Create loop over last 50 solutions
 // for(int i=225; i<276; i++)
