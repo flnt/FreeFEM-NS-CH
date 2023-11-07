@@ -16,7 +16,7 @@ real Lphy = 29.2232;
 real Ymdb = 0.7054;
 
 // Data folder
-string dataf="Pe30_Cn0.04";
+string dataf="Pe30_Cn0.02";
 
 // Domain extent
 real xmin = -2.0;

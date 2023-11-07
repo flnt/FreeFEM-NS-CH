@@ -10,7 +10,7 @@ set ytics 80,2,90
 
 set size ratio 1
 
-set output '512angles_Pe30_Cn0.02.tex'
+set output 'angles_Pe30_Cn0.02.tex'
 
 plot 'angles_Pe30_Cn0.02.txt' u 1:2 w p ps 0.4 pt 3 lt rgb 'black' notitle,\
     'angles_Pe30_Cn0.02_VOF512' u 1:2 w l lw 2 lt rgb 'red' notitle
