@@ -75,7 +75,7 @@ func initC = tanh((x+idA/2)/sqrt(2)/Cn)-tanh((x-idA/2)/sqrt(2)/Cn)-1;
 
 // Define the mesh (1 - bottom, 2 - right, 3 - top, 4 - left), plot
 mesh Th = square((xmax-xmin)*n,(ymax-ymin)*n,[xmin+(xmax-xmin)*x,ymin+(ymax-ymin)*y]);
-// plot(Th);
+plot(Th);
 
 // Define needed FE spaces and functions
 fespace Ph2 (Th,P2,periodic=[[2,y],[4,y]]);
@@ -353,12 +353,12 @@ else
 
 
 
-// Plot initial mesh and pf distribution
-//plot(t,fill=1,value=1);
-// plot(Th);
-//plot(u,fill=1,value=1);
-// plot(c,fill=1,value=1);
-// plot(fi,fill=1,value=1);
+Plot initial mesh and pf distribution
+plot(t,fill=1,value=1);
+plot(Th);
+plot(u,fill=1,value=1);
+plot(c,fill=1,value=1);
+plot(fi,fill=1,value=1);
 
 
 // // Time stepping
@@ -386,7 +386,7 @@ while(NstedChck < Nsted)
         solveNonLinNSeq
         cout << ", " << maxVN << endl;
         nAdapt++;
-        //plot(Th);
+        plot(Th);
         // getInterfGeom
         nAdapt = 0;
     }
@@ -400,7 +400,7 @@ while(NstedChck < Nsted)
     solveNonLinNSeq
     getMaxCFL
     plot(c,fill=1,value=1);
-    // plot(u,fill=1,value=1);    
+    plot(u,fill=1,value=1);    
     getInterfGeom
     updCLcoord
     dxNew = xstop(0)-xsbot(0);
@@ -436,18 +436,18 @@ while(NstedChck < Nsted)
         nRest++;
         divChck = int2d(Th)( dx(u)+dy(v) );
         cout << " Divergence of flow field = " << divChck << endl;
-        // plot(fi,fill=1,value=1);
+        plot(fi,fill=1,value=1);
         plot(c,fill=1,value=1);
-        // plot(u,fill=1,value=1);
-        // plot(u,fill=1,value=1);
+        plot(u,fill=1,value=1);
+        plot(u,fill=1,value=1);
     }
     // Prepare for the next time step
     uO[] = u[]; fiO[] = fi[]; dxOld = dxNew;
     nAdapt++;
-    // plot(fi,fill=1,value=1);
+    plot(fi,fill=1,value=1);
     plot(c,fill=1,value=1);
-    // plot(u,fill=1,value=1);
-    // plot(u,fill=1,value=1);
+    plot(u,fill=1,value=1);
+    plot(u,fill=1,value=1);
 }
 
 // Final outputs after the end of the simulation
