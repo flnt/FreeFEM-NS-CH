@@ -82,7 +82,7 @@ real tout  = 0.1;
 int  dref  = 40; // Number of time-steps between mesh adaption
 real tolNI = 1.0e-4; // Tolerance for non-linear iterations
 int  mni   = 1000;
-int  bNew  = 1; // 1-start new simulation; 0-restart from previous state 3.6
+int  bNew  = 0; // 1-start new simulation; 0-restart from previous state 3.6
 
 // Limiting maximum number of iterations in infinite loops
 int Icur, Imax = 100;
