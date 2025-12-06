@@ -50,7 +50,7 @@ real sig = 1.0;       // Surface tension
 real lc = 1.0;        // Capillary length
 
 // Non-dimensional parameters
-real Ca = 0.14;             // Capillary number
+real Ca = 0.10;             // Capillary number
 real eps = 0.05;            // Interface thickness parameter (Cahn number Cn)
 real angleEq = pi/2.0;      // Equilibrium contact angle (90 degrees)
 
@@ -71,7 +71,7 @@ real thE = angleEq;         // Contact angle
 
 // Calculate Reynolds and Peclet numbers (similar to reference codes)
 real Re = rho1*Vs*lc/mu1;   // Reynolds number
-real Pe = 1.0; // Vs*lc*Ca/Cn;      // Peclet number
+real Pe = 1.; //Vs*lc*Ca/Cn;      // Peclet number
 
 // Contact line friction (zero for now)
 real mufa = 0.0;            // Advancing contact line friction
@@ -310,7 +310,7 @@ problem NStokesExpl([u,v,p], [uu,vv,pp], solver=sparsesolver, master=0)
     // Right (label 2): no-slip u=0, v=0  
     // Left (label 4): moving wall u=0, v=V_s
     + on(1,2, u=0, v=0)
-    + on(4, u=0, v=Vs);
+    + on(4, u=0, v=1.);
 
 // ========================================================================================================
 // INITIALIZATION

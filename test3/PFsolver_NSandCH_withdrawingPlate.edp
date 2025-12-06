@@ -50,7 +50,7 @@ real sig = 1.0;       // Surface tension
 real lc = 1.0;        // Capillary length
 
 // Non-dimensional parameters
-real Ca = 0.14;             // Capillary number
+real Ca = 0.25;             // Capillary number
 real eps = 0.05;            // Interface thickness parameter (Cahn number Cn)
 real angleEq = pi/2.0;      // Equilibrium contact angle (90 degrees)
 

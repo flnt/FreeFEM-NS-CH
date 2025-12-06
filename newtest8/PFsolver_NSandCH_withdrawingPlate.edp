@@ -45,12 +45,12 @@ include "include_postProc.idp"
 // Fluid properties
 real rho1 = 1.0;      // Density of fluid 1 (liquid)
 real rho2 = 0.2;      // Density of fluid 2 (gas)
-real grav = -1.25;    // Gravity (negative = downward)
+real grav = 1.25;    // Gravity (negative = downward)
 real sig = 1.0;       // Surface tension
 real lc = 1.0;        // Capillary length
 
 // Non-dimensional parameters
-real Ca = 0.14;             // Capillary number
+real Ca = 0.15;             // Capillary number
 real eps = 0.05;            // Interface thickness parameter (Cahn number Cn)
 real angleEq = pi/2.0;      // Equilibrium contact angle (90 degrees)
 
@@ -71,7 +71,7 @@ real thE = angleEq;         // Contact angle
 
 // Calculate Reynolds and Peclet numbers (similar to reference codes)
 real Re = rho1*Vs*lc/mu1;   // Reynolds number
-real Pe = 1.0; // Vs*lc*Ca/Cn;      // Peclet number
+real Pe = 50.0; // Vs*lc*Ca/Cn;      // Peclet number
 
 // Contact line friction (zero for now)
 real mufa = 0.0;            // Advancing contact line friction
@@ -97,7 +97,7 @@ cout << "===================================" << endl;
 
 // OPTIMIZED for speed: coarser initial mesh, less frequent adaptation
 int n = 7;               // Number of segments per unit length (reduced from 10)
-real refI = 4.0;         // Refinement factor for the interface (reduced from 8)
+real refI = 8.0;         // Refinement factor for the interface (reduced from 8)
 real mGrw = 1.2;         // Growth rate of mesh elements
 
 // ========================================================================================================
@@ -105,7 +105,7 @@ real mGrw = 1.2;         // Growth rate of mesh elements
 // ========================================================================================================
 
 // OPTIMIZED for speed: larger time step, less frequent output
-real dt = 0.002;         // Time step (increased from 0.001)
+real dt = 0.001;         // Time step (increased from 0.001)
 real tfin = 20.0;        // Final time
 real tout = 0.2;         // Output interval (increased from 0.1)
 int dref = 20;           // Number of time-steps between mesh adaptation (increased from 20)
@@ -280,12 +280,12 @@ problem eq12phasefield([fi,c], [fifi,cc], solver=sparsesolver, master=0)
     = int2d(Th)    ( dt*fi*fifi - dt*c*(cO^2)*fifi - dt*Cn^2*(dx(c)*dx(fifi) + dy(c)*dy(fifi)) )
     + int2d(Th)    ( dt*cO*fifi )
     // Wetting boundary condition on bottom (label 1) and left wall (label 4)
-    + int1d(Th,1,4)( -dt*sqrt(2)/2*Cn*cTh*c*cO*fifi - 2*sqrt(2)/3*Cn^2*Ca*muf*(c + dt*uO*dx(c) + dt*vO*dy(c))*fifi )
-    + int1d(Th,1,4)( dt*sqrt(2)/2*Cn*cTh*fifi + 2*sqrt(2)/3*Cn^2*Ca*muf*cO*fifi )
+    + int1d(Th,4)( -dt*sqrt(2)/2*Cn*cTh*c*cO*fifi - 2*sqrt(2)/3*Cn^2*Ca*muf*(c + dt*uO*dx(c) + dt*vO*dy(c))*fifi )
+    + int1d(Th,4)( dt*sqrt(2)/2*Cn*cTh*fifi + 2*sqrt(2)/3*Cn^2*Ca*muf*cO*fifi )
     + int2d(Th)    ( c*cc - dt*c*(uO*dx(cc) + vO*dy(cc)) + dt*3/(4*sqrt(2))/Pe*(dx(fi)*dx(cc) + dy(fi)*dy(cc)) )
     + int2d(Th)    ( -cO*cc + dt*3/(4*sqrt(2))/Pe*(dx(fiO)*dx(cc) + dy(fiO)*dy(cc)) )
     // Convective flux through boundaries
-    + int1d(Th,1,4)( dt*c*(uO*N.x + vO*N.y)*cc );
+    + int1d(Th,4)( dt*c*(uO*N.x + vO*N.y)*cc );
 
 // ========================================================================================================
 // NAVIER-STOKES EQUATIONS WITH GRAVITY
@@ -309,7 +309,7 @@ problem NStokesExpl([u,v,p], [uu,vv,pp], solver=sparsesolver, master=0)
     // Bottom (label 1): no-slip u=0, v=0
     // Right (label 2): no-slip u=0, v=0  
     // Left (label 4): moving wall u=0, v=V_s
-    + on(1,2, u=0, v=0)
+    + on(1, u=0, v=0)
     + on(4, u=0, v=Vs);
 
 // ========================================================================================================

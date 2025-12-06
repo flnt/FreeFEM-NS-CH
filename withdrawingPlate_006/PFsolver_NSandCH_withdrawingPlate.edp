@@ -50,7 +50,7 @@ real sig = 1.0;       // Surface tension
 real lc = 1.0;        // Capillary length
 
 // Non-dimensional parameters
-real Ca = 0.14;             // Capillary number
+real Ca = 0.06;             // Capillary number
 real eps = 0.05;            // Interface thickness parameter (Cahn number Cn)
 real angleEq = pi/2.0;      // Equilibrium contact angle (90 degrees)
 
@@ -60,7 +60,7 @@ real mu1 = Vs;              // Viscosity of fluid 1
 real mu2 = Vs;              // Viscosity of fluid 2
 
 // Domain dimensions (SQUARE DOMAIN)
-real L = 3.0*lc;           // Horizontal extent
+real L = 5.0*lc;           // Horizontal extent
 real H = 5.0*lc;          // Vertical extent (square domain)
 
 // Rename for compatibility with reference code
@@ -71,7 +71,7 @@ real thE = angleEq;         // Contact angle
 
 // Calculate Reynolds and Peclet numbers (similar to reference codes)
 real Re = rho1*Vs*lc/mu1;   // Reynolds number
-real Pe = 1.0; // Vs*lc*Ca/Cn;      // Peclet number
+real Pe = 30.0; //0.5*16.0*sqrt(mu1)*Ca/Cn; // Vs*lc*Ca/Cn;      // Peclet number
 
 // Contact line friction (zero for now)
 real mufa = 0.0;            // Advancing contact line friction
@@ -96,8 +96,8 @@ cout << "===================================" << endl;
 // ========================================================================================================
 
 // OPTIMIZED for speed: coarser initial mesh, less frequent adaptation
-int n = 7;               // Number of segments per unit length (reduced from 10)
-real refI = 4.0;         // Refinement factor for the interface (reduced from 8)
+int n = 4;               // Number of segments per unit length (reduced from 10)
+real refI = 8.0;         // Refinement factor for the interface (reduced from 8)
 real mGrw = 1.2;         // Growth rate of mesh elements
 
 // ========================================================================================================
@@ -105,10 +105,10 @@ real mGrw = 1.2;         // Growth rate of mesh elements
 // ========================================================================================================
 
 // OPTIMIZED for speed: larger time step, less frequent output
-real dt = 0.002;         // Time step (increased from 0.001)
+real dt = 0.001;         // Time step (increased from 0.001)
 real tfin = 20.0;        // Final time
 real tout = 0.2;         // Output interval (increased from 0.1)
-int dref = 20;           // Number of time-steps between mesh adaptation (increased from 20)
+int dref = 200;           // Number of time-steps between mesh adaptation (increased from 20)
 int bNew = 1;            // 1 = start new simulation; 0 = restart from previous state
 
 // Limiting maximum number of iterations
@@ -468,7 +468,7 @@ for(int i=1; i<nTsteps; i++)
     cout << " CFL " << maxCFL << " y_CL " << yCL << endl;
     
     // Visualize
-    // plot(c, fill=1, value=1, wait=false);
+    plot(c, fill=1, value=1, wait=false);
     
     // Output to stats file
     {
@@ -519,7 +519,8 @@ for(int i=1; i<nTsteps; i++)
     fiO[] = fi[];
     nAdapt++;
     
-    plot(v, fill=1, value=1, wait=false);
+    // plot(c, fill=1, value=1, wait=false);
+    plot(Th);
 }
 
 // ========================================================================================================

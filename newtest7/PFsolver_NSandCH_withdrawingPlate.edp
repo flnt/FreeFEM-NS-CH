@@ -50,8 +50,8 @@ real sig = 1.0;       // Surface tension
 real lc = 1.0;        // Capillary length
 
 // Non-dimensional parameters
-real Ca = 0.14;             // Capillary number
-real eps = 0.05;            // Interface thickness parameter (Cahn number Cn)
+real Ca = 0.15;             // Capillary number
+real eps = 0.01;            // Interface thickness parameter (Cahn number Cn)
 real angleEq = pi/2.0;      // Equilibrium contact angle (90 degrees)
 
 // Derived parameters
@@ -60,8 +60,8 @@ real mu1 = Vs;              // Viscosity of fluid 1
 real mu2 = Vs;              // Viscosity of fluid 2
 
 // Domain dimensions (SQUARE DOMAIN)
-real L = 3.0*lc;           // Horizontal extent
-real H = 5.0*lc;          // Vertical extent (square domain)
+real L = 10.0*lc;           // Horizontal extent
+real H = 10.0*lc;          // Vertical extent (square domain)
 
 // Rename for compatibility with reference code
 real Cn = eps;              // Cahn number
@@ -71,7 +71,7 @@ real thE = angleEq;         // Contact angle
 
 // Calculate Reynolds and Peclet numbers (similar to reference codes)
 real Re = rho1*Vs*lc/mu1;   // Reynolds number
-real Pe = 1.0; // Vs*lc*Ca/Cn;      // Peclet number
+real Pe = 50.0; // Vs*lc*Ca/Cn;      // Peclet number
 
 // Contact line friction (zero for now)
 real mufa = 0.0;            // Advancing contact line friction
@@ -280,12 +280,12 @@ problem eq12phasefield([fi,c], [fifi,cc], solver=sparsesolver, master=0)
     = int2d(Th)    ( dt*fi*fifi - dt*c*(cO^2)*fifi - dt*Cn^2*(dx(c)*dx(fifi) + dy(c)*dy(fifi)) )
     + int2d(Th)    ( dt*cO*fifi )
     // Wetting boundary condition on bottom (label 1) and left wall (label 4)
-    + int1d(Th,1,4)( -dt*sqrt(2)/2*Cn*cTh*c*cO*fifi - 2*sqrt(2)/3*Cn^2*Ca*muf*(c + dt*uO*dx(c) + dt*vO*dy(c))*fifi )
-    + int1d(Th,1,4)( dt*sqrt(2)/2*Cn*cTh*fifi + 2*sqrt(2)/3*Cn^2*Ca*muf*cO*fifi )
+    + int1d(Th,4)( -dt*sqrt(2)/2*Cn*cTh*c*cO*fifi - 2*sqrt(2)/3*Cn^2*Ca*muf*(c + dt*uO*dx(c) + dt*vO*dy(c))*fifi )
+    + int1d(Th,4)( dt*sqrt(2)/2*Cn*cTh*fifi + 2*sqrt(2)/3*Cn^2*Ca*muf*cO*fifi )
     + int2d(Th)    ( c*cc - dt*c*(uO*dx(cc) + vO*dy(cc)) + dt*3/(4*sqrt(2))/Pe*(dx(fi)*dx(cc) + dy(fi)*dy(cc)) )
     + int2d(Th)    ( -cO*cc + dt*3/(4*sqrt(2))/Pe*(dx(fiO)*dx(cc) + dy(fiO)*dy(cc)) )
     // Convective flux through boundaries
-    + int1d(Th,1,4)( dt*c*(uO*N.x + vO*N.y)*cc );
+    + int1d(Th,4)( dt*c*(uO*N.x + vO*N.y)*cc );
 
 // ========================================================================================================
 // NAVIER-STOKES EQUATIONS WITH GRAVITY
@@ -309,7 +309,7 @@ problem NStokesExpl([u,v,p], [uu,vv,pp], solver=sparsesolver, master=0)
     // Bottom (label 1): no-slip u=0, v=0
     // Right (label 2): no-slip u=0, v=0  
     // Left (label 4): moving wall u=0, v=V_s
-    + on(1,2, u=0, v=0)
+    + on(1, u=0, v=0)
     + on(4, u=0, v=Vs);
 
 // ========================================================================================================

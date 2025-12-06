@@ -50,7 +50,7 @@ real sig = 1.0;       // Surface tension
 real lc = 1.0;        // Capillary length
 
 // Non-dimensional parameters
-real Ca = 0.14;             // Capillary number
+real Ca = 0.15;             // Capillary number
 real eps = 0.05;            // Interface thickness parameter (Cahn number Cn)
 real angleEq = pi/2.0;      // Equilibrium contact angle (90 degrees)
 
@@ -119,7 +119,7 @@ int Icur, Imax = 100;
 // ========================================================================================================
 
 // Initial interface position (flat horizontal line at y = 3.5)
-real yInterface = 1.75*lc;
+real yInterface = 3.5*lc;
 
 // Phase field initialization: -1 below interface (fluid 2/gas), +1 above (fluid 1/liquid)
 func initC = -tanh((y - yInterface)/sqrt(2)/Cn);
