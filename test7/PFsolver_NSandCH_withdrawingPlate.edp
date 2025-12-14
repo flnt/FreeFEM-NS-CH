@@ -1,32 +1,9 @@
-// ----------------------------------------------- COPYRIGHT --------------------------------------
-// Copyright 2020-2022
-// Ugis Lacis, ugis.lacis@gmail.com
-// Shervin Bagheri, shervin.bagheri@mech.kth.se
-// -------------------------------------------- LICENSE LGPLv3 ------------------------------------
-// This file is part of FreeFEM-NS-CH.
-//
-// Porous_full_bc2ifScales is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// FreeFEM-NS-CH is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with FreeFEM-NS-CH. If not, see <http://www.gnu.org/licenses/>.
-
 // ========================================================================================================
-// WITHDRAWING PLATE SIMULATION
-// ========================================================================================================
-// This code simulates a 2D withdrawing plate where the initial interface is flat and horizontal.
-// The left boundary moves upward with velocity V_s, and gravity acts downward.
-// The goal is to extract the contact line position on the left boundary as a function of time.
+// WITHDRAWING PLATE (2D) - NS + Cahn-Hilliard Phase-Field (FreeFEM++)
+// Based on your reference code: bulk equations unchanged
+// Only: (i) add gravity to NS, (ii) correct BCs for withdrawing plate
 // ========================================================================================================
 
-// Level of output
 verbosity = 0;
 
 load "gmsh";
@@ -34,515 +11,332 @@ load "iovtk";
 load "UMFPACK64";
 load "isoline";
 load "Element_P3";
-// load "MUMPS";  // Uncomment for potentially faster solver
 
 include "include_postProc.idp"
 
-// ========================================================================================================
-// PHYSICAL PARAMETERS
-// ========================================================================================================
+exec("mkdir -p data");
 
-// Fluid properties
-real rho1 = 1.0;      // Density of fluid 1 (liquid)
-real rho2 = 0.2;      // Density of fluid 2 (gas)
-real grav = -1.25;    // Gravity (negative = downward)
-real sig = 1.0;       // Surface tension
-real lc = 1.0;        // Capillary length
+// --------------------------------------------------------------------------------------------------------
+// PARAMETERS (keep what you want; these are placeholders in the same style as your code)
+// --------------------------------------------------------------------------------------------------------
+real Ca  = 0.10;
+real Cn  = 0.05;
+real Re  = 1.0;
+real Pe  = 10.0;
 
-// Non-dimensional parameters
-real Ca = 0.45;             // Capillary number
-real eps = 0.05;            // Interface thickness parameter (Cahn number Cn)
-real angleEq = pi/2.0;      // Equilibrium contact angle (90 degrees)
+real thE = pi/2.0;
+real cTh = cos(thE);
+real ls = 0.05;
 
-// Derived parameters
-real Vs = sqrt(Ca);         // Withdrawal velocity (V_s ~ 0.374)
-real mu1 = Vs;              // Viscosity of fluid 1
-real mu2 = Vs;              // Viscosity of fluid 2
+// Contact line friction (keep structure)
+real mufa = 0.0;
+real mufr = 0.0;
+func muf  = mufa;
 
-// Domain dimensions (SQUARE DOMAIN)
-real L = 3.0*lc;           // Horizontal extent
-real H = 5.0*lc;          // Vertical extent (square domain)
+// Phase-dependent viscosity and density parameters (same style as your original)
+real mu2  = 1.;
+real rho2 = 0.2;
 
-// Rename for compatibility with reference code
-real Cn = eps;              // Cahn number
-real mu2ratio = mu2/mu1;    // Viscosity ratio
-real rho2ratio = rho2/rho1; // Density ratio
-real thE = angleEq;         // Contact angle
+// Gravity (y-direction). Use negative for downward.
+real grav = -1.25;
 
-// Calculate Reynolds and Peclet numbers (similar to reference codes)
-real Re = rho1*Vs*lc/mu1;   // Reynolds number
-real Pe = 1.0; // Vs*lc*Ca/Cn;      // Peclet number
+// Withdrawal speed (plate moving upward)
+real Vs = sqrt(Ca);
 
-// Contact line friction (zero for now)
-real mufa = 0.0;            // Advancing contact line friction
-real mufr = 0.0;            // Receding contact line friction
+// Domain size
+real L = 10.0;
+real H = 10.0;
 
-cout << "===================================" << endl;
-cout << "WITHDRAWING PLATE SIMULATION" << endl;
-cout << "===================================" << endl;
-cout << "Physical parameters:" << endl;
-cout << "  Ca = " << Ca << endl;
-cout << "  Cn = " << Cn << endl;
-cout << "  Re = " << Re << endl;
-cout << "  Pe = " << Pe << endl;
-cout << "  V_s = " << Vs << endl;
-cout << "  Equilibrium angle = " << angleEq*180.0/pi << " degrees" << endl;
-cout << "  L = " << L << ", h_0 = " << H << endl;
-cout << "  Gravity = " << grav << endl;
-cout << "===================================" << endl;
+// // Mesh resolution / adaptation
+int  n    = 6;
+real refI = 4.0;
+real mGrw = 1.2;
 
-// ========================================================================================================
-// MESH PARAMETERS
-// ========================================================================================================
+// int  n    = 8;
+// real refI = 6.0;
+// real mGrw = 1.2;
 
-// OPTIMIZED for speed: coarser initial mesh, less frequent adaptation
-int n = 7;               // Number of segments per unit length (reduced from 10)
-real refI = 4.0;         // Refinement factor for the interface (reduced from 8)
-real mGrw = 1.2;         // Growth rate of mesh elements
+// Time
+real dt   = 0.007;
+real tfin = 10.;
+real tout = 0.1;
+int  dref = 25;
+int  bNew = 1;
 
-// ========================================================================================================
-// TIME STEPPING AND OUTPUT PARAMETERS
-// ========================================================================================================
+// --------------------------------------------------------------------------------------------------------
+// INITIAL CONDITION: flat interface at y = yInterface
+// Convention matches your rho/mu laws: c=+1 fluid1, c=-1 fluid2
+// Here: liquid below, gas above => +1 below, -1 above achieved by initC below.
+// --------------------------------------------------------------------------------------------------------
+real yInterface = 3.5;
+func initC = -tanh( (y - yInterface)/sqrt(2)/Cn );
 
-// OPTIMIZED for speed: larger time step, less frequent output
-real dt = 0.002;         // Time step (increased from 0.001)
-real tfin = 20.0;        // Final time
-real tout = 0.2;         // Output interval (increased from 0.1)
-int dref = 20;           // Number of time-steps between mesh adaptation (increased from 20)
-int bNew = 1;            // 1 = start new simulation; 0 = restart from previous state
+// --------------------------------------------------------------------------------------------------------
+// MESH with boundary labels:
+// 1 = bottom, 2 = right (far), 3 = top (open), 4 = left (moving plate)
+// --------------------------------------------------------------------------------------------------------
+border bnd1(t=0,L) { x=t; y=0; label=1; }    // bottom
+border bnd2(t=0,H) { x=L; y=t; label=2; }    // right (far)
+border bnd3(t=L,0) { x=t; y=H; label=3; }    // top (open)
+border bnd4(t=H,0) { x=0; y=t; label=4; }    // left (plate)
 
-// Limiting maximum number of iterations
-int Icur, Imax = 100;
-
-// ========================================================================================================
-// INITIAL CONDITION - FLAT INTERFACE
-// ========================================================================================================
-
-// Initial interface position (flat horizontal line at y = 3.5)
-real yInterface = 1.75*lc;
-
-// Phase field initialization: -1 below interface (fluid 2/gas), +1 above (fluid 1/liquid)
-func initC = -tanh((y - yInterface)/sqrt(2)/Cn);
-
-// ========================================================================================================
-// DOMAIN AND MESH DEFINITION
-// ========================================================================================================
-
-// Define the mesh boundaries (1=bottom, 2=right, 3=top, 4=left)
-border bnd1(t=0,L)    {x=t; y=0;  label=1; }  // Bottom
-border bnd2(t=0,H)   {x=L; y=t;  label=2; }  // Right
-border bnd3(t=L,0)    {x=t; y=H; label=3; }  // Top
-border bnd4(t=H,0)   {x=0; y=t;  label=4; }  // Left (withdrawing plate)
-
-// Create initial mesh
-mesh Th = buildmesh(bnd1(n*L) + bnd2(n*H) + bnd3(n*L) + bnd4(n*H));
+mesh Th = buildmesh( bnd1(n*L) + bnd2(n*H) + bnd3(n*L) + bnd4(n*H) );
 plot(Th, wait=false);
 
-// ========================================================================================================
-// FINITE ELEMENT SPACES AND FUNCTIONS
-// ========================================================================================================
-
-// Define FE spaces (NO periodic boundary conditions for this problem)
+// --------------------------------------------------------------------------------------------------------
+// FE SPACES (NO periodicity for withdrawing plate)
+// --------------------------------------------------------------------------------------------------------
 fespace Ph2 (Th, P2);
 fespace Ph1 (Th, P1);
 fespace PFh1(Th, [P1,P1]);
 fespace FLh (Th, [P2,P2,P1]);
 
-// Flow variables
-FLh [u,v,p], [uu,vv,pp], [uO,vO,pO];
+FLh  [u,v,p], [uu,vv,pp], [uO,vO,pO];
+PFh1 [fi,c],  [fifi,cc],  [fiO,cO];
 
-// Phase field variables
-PFh1 [fi,c], [fifi,cc], [fiO,cO];
-
-// Streamline for visualization
 Ph2 str, vstr;
 
-// ========================================================================================================
-// MATERIAL PROPERTIES AS FUNCTIONS OF PHASE FIELD
-// ========================================================================================================
+// --------------------------------------------------------------------------------------------------------
+// MATERIAL LAWS (unchanged style)
+// --------------------------------------------------------------------------------------------------------
+func rho  = (c >=-1.0)*(c <=1.0)*0.5*(c +1-rho2*(c -1)) + (c <-1.0)*rho2 + (c >1.0);
+func rhoO = (cO>=-1.0)*(cO<=1.0)*0.5*(cO+1-rho2*(cO-1)) + (cO<-1.0)*rho2 + (cO>1.0);
 
-// Density and viscosity vary smoothly across the interface
-func rho = (c >= -1.0)*(c <= 1.0)*0.5*(c + 1 - rho2ratio*(c - 1)) + (c < -1.0)*rho2ratio + (c > 1.0);
-func rhoO= (cO >= -1.0)*(cO <= 1.0)*0.5*(cO + 1 - rho2ratio*(cO - 1)) + (cO < -1.0)*rho2ratio + (cO > 1.0);
-func mu  = (c >= -1.0)*(c <= 1.0)*0.5*(c + 1 - mu2ratio*(c - 1)) + (c < -1.0)*mu2ratio + (c > 1.0);
-func muO = (cO >= -1.0)*(cO <= 1.0)*0.5*(cO + 1 - mu2ratio*(cO - 1)) + (cO < -1.0)*mu2ratio + (cO > 1.0);
+func mu   = Vs*((c >=-1.0)*(c <=1.0)*0.5*(c +1-mu2 *(c -1)) + (c <-1.0)*mu2  + (c >1.0));
+func muO  = Vs*((cO>=-1.0)*(cO<=1.0)*0.5*(cO+1-mu2 *(cO-1)) + (cO<-1.0)*mu2  + (cO>1.0));
 
-// Contact line friction
-func muf = mufa;
-
-// ========================================================================================================
-// MACROS FOR MESH ADAPTATION AND SOLUTION
-// ========================================================================================================
-
-// Mesh adaptation
+// --------------------------------------------------------------------------------------------------------
+// MESH ADAPTATION (no periodic)
+// --------------------------------------------------------------------------------------------------------
 macro getAdaptMesh()
-Th = adaptmesh(Th, c, hmin=1.0/(n*refI), hmax=1.0/n, iso=true, ratio=mGrw, err=0.001, nbvx=1e8);
+Th = adaptmesh(Th,c,hmin=1.0/(n*refI),hmax=1.0/n,iso=true,ratio=mGrw,err=0.001,nbvx=1e8);
 [uu,vv,pp] = [0,0,0]; [fifi,cc] = [0,0];
-[u,v,p] = [u,v,p]; [uO,vO,pO] = [uO,vO,pO];
-[fi,c] = [fi,c]; [fiO,cO] = [fiO,cO];
+[u,v,p]    = [u,v,p]; [uO,vO,pO] = [uO,vO,pO];
+[fi,c]     = [fi,c];  [fiO,cO]   = [fiO,cO];
 // EOM
 
-// Solve phase field equations
 macro solveNonLinPFeq()
 eq12phasefield;
 cout << "PF done ";
 // EOM
 
-// Solve Navier-Stokes equations
 macro solveNonLinNSeq()
 NStokesExpl;
 cout << "NS done ";
 // EOM
 
-// Maximum CFL number
+// --------------------------------------------------------------------------------------------------------
+// (Optional) CFL check (same structure as your code)
+// --------------------------------------------------------------------------------------------------------
 real maxCFL;
 int nt;
 real mgU, xa, xb, ya, yb, ds;
+
 macro getMaxCFL()
 nt = Th.nt;
 maxCFL = 0.0;
 for(int i=0; i<nt; i++)
 {
-    for(int j=0; j<3; j++)
-    {
-        xa = Th[i][j].x; ya = Th[i][j].y;
-        xb = Th[i][(j+1)%3].x; yb = Th[i][(j+1)%3].y;
-        ds = sqrt((xb-xa)^2 + (yb-ya)^2);
-        mgU = max(sqrt(u(xa,ya)^2 + v(xa,ya)^2), sqrt(u(xb,yb)^2 + v(xb,yb)^2));
-        maxCFL = max(maxCFL, mgU*dt/ds);
-    }
+  for(int j=0; j<3; j++)
+  {
+    xa = Th[i][ j     ].x; ya = Th[i][ j     ].y;
+    xb = Th[i][(j+1)%3].x; yb = Th[i][(j+1)%3].y;
+    ds = sqrt((xb-xa)^2+(yb-ya)^2);
+    mgU = max(sqrt(u(xa,ya)^2+v(xa,ya)^2),sqrt(u(xb,yb)^2+v(xb,yb)^2));
+    maxCFL = max(maxCFL,mgU*dt/ds);
+  }
 }
 // EOM
 
-// Maximum Von Neumann number
-real maxVN;
-macro getMaxVN()
-nt = Th.nt;
-maxVN = 5.0;
-for(int i=0; i<nt; i++)
-{
-    for(int j=0; j<3; j++)
-    {
-        xa = Th[i][j].x; ya = Th[i][j].y;
-        xb = Th[i][(j+1)%3].x; yb = Th[i][(j+1)%3].y;
-        ds = sqrt((xb-xa)^2 + (yb-ya)^2);
-        maxVN = min(maxVN, ds);
-    }
-}
-maxVN = 1/Pe*dt/maxVN^2;
-// EOM
-
-// ========================================================================================================
-// CONTACT LINE EXTRACTION ON LEFT BOUNDARY
-// ========================================================================================================
-
-// Variables for contact line position
-real yCL = yInterface;  // Contact line vertical position on left boundary
-
-// Function to find contact line position on left boundary (x=0)
+// --------------------------------------------------------------------------------------------------------
+// CONTACT LINE on plate (x=0): find y such that c(0,y)=0
+// --------------------------------------------------------------------------------------------------------
+real yCL = yInterface;
 real tolBi = 1.0e-8, ay, by, cy;
+int Icur, Imax = 200;
+
 func real getCLposition()
 {
-    // Binary search for y-coordinate where c(0,y) = 0 on the left boundary
-    ay = 0.0; by = H; cy = 0.5*(ay + by);
-    Icur = 0;
-    while(abs(c(0.0, cy)) > tolBi)
-    {
-        if(sign(c(0.0, cy)) == sign(c(0.0, ay))) ay = cy; else by = cy;
-        cy = 0.5*(ay + by); 
-        Icur++;
-        if(Icur > Imax) {
-            cout << "Warning: Failed to converge in getCLposition!" << endl; 
-            break;
-        }
-    }
-    return cy;
+  ay = 0.0; by = H; cy = 0.5*(ay+by);
+  Icur = 0;
+
+  // If no sign change, return previous value (avoids infinite loop)
+  if( sign(c(0.0,ay)) == sign(c(0.0,by)) ) return yCL;
+
+  while( abs(c(0.0,cy)) > tolBi )
+  {
+    if( sign(c(0.0,cy)) == sign(c(0.0,ay)) ) ay = cy; else by = cy;
+    cy = 0.5*(ay+by);
+    Icur++;
+    if(Icur > Imax) { cout << "Warning: getCLposition did not converge\n"; break; }
+  }
+  return cy;
 }
 
-// Macro to update contact line position
 macro updCLcoord()
-{
-    yCL = getCLposition();
-}
+yCL = getCLposition();
 // EOM
 
 // ========================================================================================================
-// COSINE OF EQUILIBRIUM CONTACT ANGLE
+// CAHN–HILLIARD EQUATIONS (BULK UNCHANGED)
+// Only BC change: wetting/contact-angle terms applied ONLY on plate (label 4)
+// and boundary convection term applied on all boundaries (1,2,3,4).
 // ========================================================================================================
+problem eq12phasefield([fi,c],[fifi,cc],solver=sparsesolver,master=0)
+    = int2d(Th)    ( dt*fi*fifi - dt*c*(cO^2  )*fifi - dt*Cn^2*(dx(c)*dx(fifi)+dy(c)*dy(fifi))  )
+    + int2d(Th)    (                     +dt*cO*fifi                                            )
 
-real cTh = cos(thE);
+    // --- WETTING / CONTACT ANGLE + CONTACT LINE FRICTION: PLATE ONLY (label 4)
+    + int1d(Th,4)  ( -dt*sqrt(2)/2*Cn*cTh*c*cO*fifi  - 2*sqrt(2)/3*Cn^2*Ca*muf*(c  + dt*uO*dx(c)+dt*vO*dy(c) )*fifi )
+    + int1d(Th,4)  (  dt*sqrt(2)/2*Cn*cTh     *fifi  + 2*sqrt(2)/3*Cn^2*Ca*muf* cO                            *fifi )
 
-// ========================================================================================================
-// CAHN-HILLIARD EQUATIONS WITH WETTING BOUNDARY CONDITION
-// ========================================================================================================
+    + int2d(Th)    ( c *cc - dt*c*(uO*dx(cc)+vO*dy(cc)) + dt*3/(4*sqrt(2))/Pe*(dx(fi )*dx(cc)+dy(fi )*dy(cc)) )
+    + int2d(Th)    (-cO*cc                              + dt*3/(4*sqrt(2))/Pe*(dx(fiO)*dx(cc)+dy(fiO)*dy(cc)) )
 
-problem eq12phasefield([fi,c], [fifi,cc], solver=sparsesolver, master=0)
-    = int2d(Th)    ( dt*fi*fifi - dt*c*(cO^2)*fifi - dt*Cn^2*(dx(c)*dx(fifi) + dy(c)*dy(fifi)) )
-    + int2d(Th)    ( dt*cO*fifi )
-    // Wetting boundary condition on bottom (label 1) and left wall (label 4)
-    + int1d(Th,1,4)( -dt*sqrt(2)/2*Cn*cTh*c*cO*fifi - 2*sqrt(2)/3*Cn^2*Ca*muf*(c + dt*uO*dx(c) + dt*vO*dy(c))*fifi )
-    + int1d(Th,1,4)( dt*sqrt(2)/2*Cn*cTh*fifi + 2*sqrt(2)/3*Cn^2*Ca*muf*cO*fifi )
-    + int2d(Th)    ( c*cc - dt*c*(uO*dx(cc) + vO*dy(cc)) + dt*3/(4*sqrt(2))/Pe*(dx(fi)*dx(cc) + dy(fi)*dy(cc)) )
-    + int2d(Th)    ( -cO*cc + dt*3/(4*sqrt(2))/Pe*(dx(fiO)*dx(cc) + dy(fiO)*dy(cc)) )
-    // Convective flux through boundaries
-    + int1d(Th,1,4)( dt*c*(uO*N.x + vO*N.y)*cc );
+    // --- CONSERVATIVE ADVECTION BOUNDARY FLUX: ALL BOUNDARIES in non-periodic domain
+    + int1d(Th,1,2,3,4)( dt*c*(uO*N.x+vO*N.y)*cc );
 
-// ========================================================================================================
-// NAVIER-STOKES EQUATIONS WITH GRAVITY
-// ========================================================================================================
-
-problem NStokesExpl([u,v,p], [uu,vv,pp], solver=sparsesolver, master=0)
-    // Viscous terms
-    = int2d(Th)(   dt/Re*(-p + 2.0*mu*dx(u))*dx(uu) + dt/Re*mu*(dy(u) + dx(v))*dy(uu)
-                 + dt/Re*(-p + 2.0*mu*dy(v))*dy(vv) + dt/Re*mu*(dx(v) + dy(u))*dx(vv)
-                 - (dx(u) + dy(v))*pp - 1e-10*p*pp
-                 // Inertia terms
-                 + rho*( (u*uu + v*vv) + dt*(uO*dx(u) + vO*dy(u))*uu + dt*(uO*dx(v) + vO*dy(v))*vv
-                                       + dt*(u*dx(uO) + v*dy(uO))*uu + dt*(u*dx(vO) + v*dy(vO))*vv ) )
-    // Old time step terms
-    + int2d(Th)(  rho*(-(uO*uu + vO*vv) - dt*(uO*dx(uO) + vO*dy(uO))*uu - dt*(uO*dx(vO) + vO*dy(vO))*vv )
-                  // Capillary force
-                  - 3/(2*sqrt(2))*dt*fiO*(dx(cO)*uu + dy(cO)*vv)/(Cn*Ca*Re)
-                  // GRAVITY TERM (acts in y-direction)
-                  - dt*rho*grav*vv )
-    // Boundary conditions:
-    // Bottom (label 1): no-slip u=0, v=0
-    // Right (label 2): no-slip u=0, v=0  
-    // Left (label 4): moving wall u=0, v=V_s
-    + on(1,2, u=0, v=0)
-    + on(4, u=0, v=Vs);
+    // + on(2, c = initC);
 
 // ========================================================================================================
-// INITIALIZATION
+// NAVIER–STOKES (BULK UNCHANGED)
+// Only additions:
+//   - Gravity term (volume force in y-direction)
+//   - Withdrawing-plate BCs:
+//        bottom (1): u=0, v=0
+//        plate  (4): u=0, v=Vs
+//        top    (3): p=0  (pressure reference / open)
+//        right  (2): natural (do-nothing) open/far
 // ========================================================================================================
+problem NStokesExpl([u,v,p],[uu,vv,pp],solver=sparsesolver,master=0)
+    = int2d(Th)(   dt/Re*(-p + 2.0*mu*dx(u))*dx(uu) + dt/Re*mu*(dy(u)+dx(v))*dy(uu)
+                 + dt/Re*(-p + 2.0*mu*dy(v))*dy(vv) + dt/Re*mu*(dx(v)+dy(u))*dx(vv)
+                   - (dx(u)+dy(v))*pp - 1e-10*p*pp
+                + rho *( (u *uu+v *vv) + dt*(uO*dx(u )+vO*dy(u ))*uu + dt*(uO*dx(v )+vO*dy(v ))*vv
+                                       + dt*(u *dx(uO)+v *dy(uO))*uu + dt*(u *dx(vO)+v *dy(vO))*vv )  )
+    + int2d(Th)(  rho *(-(uO*uu+vO*vv) - dt*(uO*dx(uO)+vO*dy(uO))*uu - dt*(uO*dx(vO)+vO*dy(vO))*vv )
+                 - 3/(2*sqrt(2))*dt*fiO*(dx(cO)*uu+dy(cO)*vv)/(Cn*Ca*Re) )
 
-cout << "Initializing phase field and adapting mesh..." << endl;
+    // --- GRAVITY: body force in y-direction (use grav<0 for downward)
+    + int2d(Th)( dt*rho*grav*vv )
 
-// Initialize phase field
-[fi,c] = [0, initC];
+    + int1d(Th,4)( dt/Re*mu/ls*v*vv ) + int1d(Th,4)(-dt/Re*mu/ls*Vs*vv )
 
-// Initial mesh adaptation (3 passes for good quality)
+    // --- WITHDRAWING PLATE BCs
+    + on(1, u=0, v=0)        // bottom no-slip
+    // + on(2, u=0, v=0)        // right no-slip
+    + on(2, p=0)             // right pressure reference
+    // + on(4, u=0, v=Vs)       // plate moving upward for no slip
+    + on(4, u=0)       // plate moving upward for slip
+    + on(3, p=0);            // open/top pressure reference
+
+// ========================================================================================================
+// INITIALISATION
+// ========================================================================================================
+[fi,c] = [0,initC];
+
+// Initial mesh adaptation passes
 getAdaptMesh
-[fi,c] = [0, initC];
+[fi,c] = [0,initC];
 getAdaptMesh
-[fi,c] = [0, initC];
+[fi,c] = [0,initC];
 getAdaptMesh
-[fi,c] = [0, initC];
+[fi,c] = [0,initC];
 
-// Initialize velocity field (at rest initially)
-[u,v,p] = [0, 0, 0];
+// Initial velocity: at rest (or you can seed a Couette profile if desired)
+// Here: rest
+[u,v,p] = [0,0,0];
 
-// Store old values
-uO[] = u[];
-fiO[] = fi[];
+// Initialise old fields consistently
+[uO,vO,pO] = [u,v,p];
+[fiO,cO]   = [fi,c];
 
-// ========================================================================================================
-// OUTPUT INITIALIZATION
-// ========================================================================================================
+// Initial CL
+updCLcoord
 
-int nAout, nAdapt, nRest;
-real curt;
+// Output initial state
+int nAout = 0, nAdapt = 0;
+real curt = 0.0;
 
-if(bNew == 1)
+savevtk("data/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+savemesh(Th,"data/out_"+nAout+".msh");
 {
-    // Start new simulation
-    nAout = 0; nAdapt = 0; nRest = 0;
-    curt = 0.0;
-    
-    // Get initial contact line position
-    updCLcoord
-    
-    // Save initial state in VTK format
-    savevtk("data/out_" + nAout + ".vtk", Th, [u,v], p, c, fi, rho, mu, str, 
-            dataname="velocity pressure cvar phivar rho mu str");
-    
-    // Save mesh and data in FreeFEM format
-    savemesh(Th, "data/out_" + nAout + ".msh");
-    {
-        ofstream resfile("data/out_" + nAout + ".dat");
-        resfile << u[];
-        resfile << fi[];
-    }
-    nAout++;
-    
-    // Create statistics file for contact line tracking
-    {
-        ofstream resfile("stats.txt");
-        resfile << "# Withdrawing plate simulation - Contact line tracking" << endl;
-        resfile << "# t, y_CL (contact line height on left boundary)" << endl;
-        resfile << curt << " " << yCL << endl;
-    }
-    
-    cout << "Initial state saved. Contact line at y = " << yCL << endl;
+  ofstream resfile("data/out_"+nAout+".dat");
+  resfile << u[] << v[] << p[] << fi[] << c[];
 }
-else if(bNew == 0)
 {
-    // Restart from previous state
-    ifstream restxt("data/restart.txt");
-    restxt >> nAout; restxt >> nAdapt; restxt >> curt;
-    cout << "Restarting from previous state with curt = " << curt << endl;
-    
-    Th = readmesh("data/out_" + nAout + ".msh");
-    [uu,vv,pp] = [0,0,0]; [fifi,cc] = [0,0];
-    [u,v,p] = [0,0,0]; [uO,vO,pO] = [0,0,0];
-    [fi,c] = [0,0]; [fiO,cO] = [0,0];
-    
-    ifstream resdat("data/out_" + nAout + ".dat");
-    resdat >> uO[];
-    resdat >> fiO[];
-    nAout++;
-    
-    // Process statistics file
-    exec("mv stats.txt stats_old.txt");
-    ifstream prevst("stats_old.txt");
-    ofstream updtst("stats.txt");
-    updtst << "# Withdrawing plate simulation - Contact line tracking" << endl;
-    updtst << "# t, y_CL (contact line height on left boundary)" << endl;
-    
-    string tmp;
-    for(int i=0; i<2; i++) prevst >> tmp;
-    real readt, tmpy;
-    while(1)
-    {
-    prevst >> readt; prevst >> tmpy;
-    updtst << readt << " " << tmpy << endl;
-    if(abs(readt-curt) < 0.01*dt) break;
-    }
-    exec("rm stats_old.txt");
+  ofstream st("stats.txt");
+  st << "# t  yCL\n";
+  st << curt << " " << yCL << "\n";
 }
-else
-{
-    cout << "Unknown bNew setting " << bNew << endl;
-    exit(1);
-}
+nAout++;
 
-// Plot initial mesh and phase field
-plot(Th, wait=false);
-plot(c, fill=1, value=1, wait=false);
+// Plot
+plot(c,fill=1,value=1,wait=false);
 
 // ========================================================================================================
-// TIME STEPPING LOOP
+// TIME LOOP
 // ========================================================================================================
-
-cout << "Starting time stepping..." << endl;
-
 int nTsteps = tfin/dt;
-for(int i=1; i<nTsteps; i++)
+
+for(int it=1; it<=nTsteps; it++)
 {
-    // plot(c,fill=1,value=1);
-    
-    // Mesh adaptation if needed
-    if(nAdapt == dref)
+  plot(c,fill=1,value=1,wait=false);
+  if(nAdapt == dref)
+  {
+    cout << "Mesh adapt... ";
+    getAdaptMesh
+    nAdapt = 0;
+  }
+
+  curt += dt;
+  cout << "t=" << curt << ", ";
+
+  solveNonLinPFeq
+  cout << " ";
+  solveNonLinNSeq
+
+  getMaxCFL
+  updCLcoord
+
+  cout << " CFL " << maxCFL << " yCL " << yCL << endl;
+
+  {
+    ofstream st("stats.txt",append);
+    st << curt << " " << yCL << "\n";
+  }
+
+  if( abs(curt - nAout*tout) < 0.01*tout )
+  {
+    solve streamlines(str,vstr,solver=sparsesolver,master=0) =
+         int2d(Th)( - (dx(str)*dx(vstr)+dy(str)*dy(vstr)) - 1.0e-10*str*vstr )
+       + int1d(Th,1,2,3,4)( (-v*N.x+u*N.y)*vstr )
+       + int2d(Th)( (dx(v) - dy(u))*vstr );
+
+    savevtk("data/out_"+nAout+".vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+    savemesh(Th,"data/out_"+nAout+".msh");
     {
-        cout << "    Mesh adapt 1, ";
-        getAdaptMesh
-        solveNonLinPFeq
-        cout << " ";
-        solveNonLinNSeq
-        cout << endl << "    Mesh adapt 2, ";
-        getAdaptMesh
-        getMaxVN
-        solveNonLinPFeq
-        cout << " ";
-        solveNonLinNSeq
-        cout << ", VN = " << maxVN << endl;
-        nAdapt++;
-        nAdapt = 0;
+      ofstream resfile("data/out_"+nAout+".dat");
+      resfile << u[] << v[] << p[] << fi[] << c[];
     }
-    
-    // Advance time
-    curt = curt + dt;
-    cout << "t = " << curt << ", ";
-    
-    // Solve phase field equations
-    solveNonLinPFeq
-    
-    // Solve Navier-Stokes equations
-    cout << " ";
-    solveNonLinNSeq
-    
-    // Get CFL number and contact line position
-    getMaxCFL
-    updCLcoord
-    
-    cout << " CFL " << maxCFL << " y_CL " << yCL << endl;
-    
-    // Visualize
-    // plot(c, fill=1, value=1, wait=false);
-    
-    // Output to stats file
-    {
-        ofstream resfile("stats.txt", append);
-        resfile << curt << " " << yCL << endl;
-    }
-    
-    // Save data at regular intervals
-    if(abs(curt - nAout*tout) < 0.01*tout)
-    {
-        cout << " Saving data to file " << nAout << " !" << endl;
-        
-        // Solve for streamlines
-        solve streamlines(str, vstr, solver=sparsesolver, master=0) =
-              int2d(Th)( -(dx(str)*dx(vstr) + dy(str)*dy(vstr)) - 1.0e-10*str*vstr )
-            + int1d(Th,1,2,3,4)( (-v*N.x + u*N.y)*vstr )
-            + int2d(Th)( (dx(v) - dy(u))*vstr );
-        
-        // Save VTK output
-        savevtk("data/out_" + nAout + ".vtk", Th, [u,v], p, c, fi, rho, mu, str,
-                dataname="velocity pressure cvar phivar rho mu str");
-        
-        // Save mesh and data
-        savemesh(Th, "data/out_" + nAout + ".msh");
-        {
-            ofstream resfile("data/out_" + nAout + ".dat");
-            resfile << u[];
-            resfile << fi[];
-        }
-        
-        // Save restart info
-        {
-            ofstream restxt("data/restart.txt");
-            restxt << nAout << endl;
-            restxt << nAdapt << endl;
-            restxt << curt << endl;
-        }
-        
-        nAout++;
-        nRest++;
-        
-        real divChck = int2d(Th)(dx(u) + dy(v));
-        cout << " Divergence of flow field = " << divChck << endl;
-    }
-    
-    // Prepare for next time step
-    uO[] = u[];
-    fiO[] = fi[];
-    nAdapt++;
-    
-    plot(v, fill=1, value=1, wait=false);
+    nAout++;
+  }
+
+  // Update old fields
+  [uO,vO,pO] = [u,v,p];
+  [fiO,cO]   = [fi,c];
+
+  nAdapt++;
 }
 
 // ========================================================================================================
 // FINAL OUTPUT
 // ========================================================================================================
-
-cout << "Simulation complete!" << endl;
+savevtk("data/out_Final.vtk",Th,[u,v],p,c,fi,rho,mu,str,dataname="velocity pressure cvar phivar rho mu str");
+savemesh(Th,"data/out_Final.msh");
 {
-    ofstream flag("simdone");
-    flag << 1 << endl;
-    
-    cout << " Saving final data to file!" << endl;
-    
-    // Save final VTK
-    savevtk("data/out_Final.vtk", Th, [u,v], p, c, fi, rho, mu, str,
-            dataname="velocity pressure cvar phivar rho mu str");
-    
-    // Save final mesh and data
-    savemesh(Th, "data/out_Final.msh");
-    ofstream resfile("data/out_Final.dat");
-    resfile << u[];
-    resfile << fi[];
+  ofstream resfile("data/out_Final.dat");
+  resfile << u[] << v[] << p[] << fi[] << c[];
 }
 
-cout << "Final contact line position: y_CL = " << yCL << endl;
-cout << "Results saved in stats.txt" << endl;
+cout << "Done. Final yCL=" << yCL << endl;
